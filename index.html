@@ -1,205 +1,769 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fundos Imobiliários - Dados em Tempo Real</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-:root { --primary-color:#2c3e50; --secondary-color:#3498db; --light-color:#ecf0f1; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8f9fa; color: #333; padding-top:20px; }
-.header { background: linear-gradient(135deg,var(--primary-color),var(--secondary-color)); color:white; padding:20px; border-radius:10px; margin-bottom:25px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
-.card { border-radius:10px; box-shadow:0 4px 8px rgba(0,0,0,0.05); transition: transform 0.3s ease; margin-bottom:20px; border:none; overflow:hidden;}
-.card-header { background-color: var(--primary-color); color:white; border-radius:10px 10px 0 0 !important; font-weight:600; padding:15px;}
-.table-responsive { border-radius:10px; overflow:hidden; margin-bottom:20px;}
-table { width:100%; border-collapse: collapse;}
-th { background-color: var(--secondary-color); color:white; position:sticky; top:0; padding:12px 10px; font-size:0.9rem;}
-td { padding:12px 10px; border-bottom:1px solid #dee2e6;}
-.table-hover tbody tr:hover { background-color: rgba(52,152,219,0.1);}
-.positive { color:#27ae60; font-weight:600;}
-.negative { color:#e74c3c; font-weight:600;}
-.summary-card { background-color: var(--light-color); border-left:4px solid var(--secondary-color);}
-.loading { display:inline-block; width:20px; height:20px; border:3px solid rgba(255,255,255,.3); border-radius:50%; border-top-color:#fff; animation:spin 1s ease-in-out infinite;}
-@keyframes spin { to { transform: rotate(360deg); } }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundos Imobiliários - Dados em Tempo Real</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            padding-top: 20px;
+            -webkit-text-size-adjust: 100%;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+            margin-bottom: 20px;
+            border: none;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: 600;
+            padding: 15px;
+        }
+        
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background-color: var(--secondary-color);
+            color: white;
+            position: sticky;
+            top: 0;
+            padding: 12px 10px;
+            font-size: 0.9rem;
+        }
+        
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        .positive {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .negative {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        .neutral {
+            color: #f39c12;
+            font-weight: 600;
+        }
+        
+        .not-found {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .summary-card {
+            background-color: var(--light-color);
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .progress {
+            height: 8px;
+            margin-bottom: 5px;
+        }
+        
+        .filter-section {
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .ticker-label {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+            display: inline-block;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .btn-ios {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-weight: 600;
+            margin: 10px 0;
+            display: inline-block;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .last-update {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            text-align: right;
+            margin-bottom: 10px;
+        }
+        
+        .blink {
+            animation: blink-animation 2s infinite;
+        }
+        
+        .api-status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-active {
+            background-color: #27ae60;
+        }
+        
+        .status-inactive {
+            background-color: #e74c3c;
+        }
+        
+        .status-warning {
+            background-color: #f39c12;
+        }
+        
+        @keyframes blink-animation {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .api-key-field {
+            font-family: monospace;
+        }
+        
+        @media (max-width: 768px) {
+            th, td {
+                padding: 8px 5px;
+                font-size: 0.8rem;
+            }
+            
+            .card {
+                margin-bottom: 15px;
+            }
+            
+            .table-responsive {
+                font-size: 0.85rem;
+                overflow-x: auto;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-    <div class="header text-center">
-        <h1><i class="fas fa-chart-line me-2"></i>Fundos Imobiliários em Tempo Real</h1>
-        <p class="lead">Dados das APIs Alpha Vantage e HG Brasil</p>
-        <div class="mt-3">
-            <span class="badge bg-primary">GARE11</span>
-            <span class="badge bg-success">CACR11</span>
-            <span class="badge bg-danger">KNCR11</span>
-            <span class="badge bg-warning text-dark">SNEL11</span>
-            <span class="badge bg-purple">XPML11</span>
+    <div class="container">
+        <div class="header text-center">
+            <h1><i class="fas fa-chart-line me-2"></i>Fundos Imobiliários em Tempo Real</h1>
+            <p class="lead">Dados das APIs Alpha Vantage e HG Brasil</p>
+            <div class="mt-3">
+                <span class="ticker-label" style="background-color: #3498db;">GARE11</span>
+                <span class="ticker-label" style="background-color: #2ecc71;">CACR11</span>
+                <span class="ticker-label" style="background-color: #e74c3c;">KNCR11</span>
+                <span class="ticker-label" style="background-color: #f39c12;">SNEL11</span>
+                <span class="ticker-label" style="background-color: #9b59b6;">XPML11</span>
+            </div>
+            <div class="mt-3">
+                <span class="badge bg-success blink"><i class="fas fa-sync-alt me-1"></i> Atualizando automaticamente</span>
+                <p class="last-update" id="lastUpdate">Última atualização: carregando...</p>
+            </div>
+            <div class="mt-2">
+                <span class="badge bg-info">
+                    <span class="api-status status-active" id="alphaStatus"></span> Alpha Vantage
+                </span>
+                <span class="badge bg-info ms-2">
+                    <span class="api-status status-active" id="hgStatus"></span> HG Brasil
+                </span>
+            </div>
         </div>
-        <div class="mt-2">
-            <span class="badge bg-info"><span class="api-status status-active" id="alphaStatus"></span> Alpha Vantage</span>
-            <span class="badge bg-info ms-2"><span class="api-status status-active" id="hgStatus"></span> HG Brasil</span>
+        
+        <div class="filter-section mb-4">
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <label for="sortSelect" class="form-label">Ordenar por:</label>
+                    <select class="form-select" id="sortSelect">
+                        <option value="ticker">Ticker</option>
+                        <option value="price">Preço</option>
+                        <option value="variation">Variação</option>
+                        <option value="volume">Volume</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label for="searchInput" class="form-label">Buscar:</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Digite o ticker...">
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label class="form-label">Ações:</label>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" id="refreshBtn">
+                            <i class="fas fa-sync-alt"></i> Atualizar Agora
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <p class="last-update" id="lastUpdate">Última atualização: carregando...</p>
-    </div>
-
-    <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>Ticker</th>
-                    <th>Preço (R$)</th>
-                    <th>Variação</th>
-                    <th>DY (%)</th>
-                    <th>P/VP</th>
-                    <th>Último Rend.</th>
-                    <th>Volume</th>
-                    <th>Fonte</th>
-                </tr>
-            </thead>
-            <tbody id="fiiTableBody">
-                <tr>
-                    <td colspan="8" class="text-center py-4">
-                        <div class="d-flex justify-content-center align-items-center">
-                            <div class="loading me-2"></div>
-                            <span>Carregando dados...</span>
+        
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Preço (R$)</th>
+                        <th>Variação (%)</th>
+                        <th>Volume</th>
+                        <th>Últ. Atualização</th>
+                        <th>Fonte</th>
+                    </tr>
+                </thead>
+                <tbody id="fiiTableBody">
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            <div class="d-flex justify-content-center align-items-center py-4">
+                                <div class="loading me-2"></div>
+                                <span>Carregando dados das APIs...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Configurações das APIs</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Alpha Vantage API Key</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control api-key-field" id="alphaKey" value="FED4M5E51XUFQBLO">
+                                <button class="btn btn-outline-secondary toggle-key" type="button">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Status: <span id="alphaStatusText">Conectando...</span></div>
                         </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="card summary-card mt-4">
-        <div class="card-body">
-            <h4 class="card-title"><i class="fas fa-lightbulb me-2"></i>Resumo da Carteira</h4>
-            <p class="card-text" id="portfolioSummary">Carregando análise da carteira...</p>
-            <p class="last-update">Análise atualizada: <span id="summaryUpdate">carregando...</span></p>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">HG Brasil API Key</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control api-key-field" id="hgKey" value="66b9d746">
+                                <button class="btn btn-outline-secondary toggle-key" type="button">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Status: <span id="hgStatusText">Conectando...</span></div>
+                        </div>
+                        
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                            <label class="form-check-label" for="autoRefresh">Atualização automática (5 min)</label>
+                        </div>
+                        
+                        <button class="btn btn-success w-100" id="saveKeysBtn">
+                            <i class="fas fa-save"></i> Salvar Configurações
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Status das APIs</div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Alpha Vantage</span>
+                            <span class="badge bg-success" id="alphaStatusBadge">Conectando...</span>
+                        </div>
+                        <div class="progress mb-4">
+                            <div class="progress-bar" id="alphaUsage" style="width: 0%">0%</div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>HG Brasil</span>
+                            <span class="badge bg-success" id="hgStatusBadge">Conectando...</span>
+                        </div>
+                        <div class="progress mb-4">
+                            <div class="progress-bar" id="hgUsage" style="width: 0%">0%</div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Dados são buscados de ambas as APIs simultaneamente
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+        
+        <div class="card summary-card mt-4">
+            <div class="card-body">
+                <h4 class="card-title"><i class="fas fa-lightbulb me-2"></i>Resumo da Carteira</h4>
+                <p class="card-text" id="portfolioSummary">Carregando análise da carteira...</p>
+                <p class="last-update">Última atualização: <span id="summaryUpdate">carregando...</span></p>
+            </div>
+        </div>
+        
+        <footer>
+            <p id="connectionStatus"><i class="fas fa-wifi"></i> Conectando às APIs...</p>
+            <p>© 2023 - Análise de Fundos Imobiliários em Tempo Real</p>
+        </footer>
     </div>
 
-    <footer>
-        <p id="connectionStatus"><i class="fas fa-wifi"></i> Conectando às APIs...</p>
-        <p>© 2025 - Análise de Fundos Imobiliários em Tempo Real</p>
-    </footer>
-</div>
-
-<script>
-const config={alphaVantageKey:"FED4M5E51XUFQBLO",hgBrasilKey:"66b9d746",autoRefresh:true,refreshInterval:300000};
-const tickers=["GARE11","CACR11","KNCR11","SNEL11","XPML11"];
-const fiis={};
-tickers.forEach(t=>{fiis[t]={price:"vazio",variation:"vazio",dy:"vazio",pvp:"vazio",lastIncome:"vazio",volume:"vazio",source:"vazio"};});
-const elements={
-fiiTableBody:document.getElementById('fiiTableBody'),
-lastUpdate:document.getElementById('lastUpdate'),
-portfolioSummary:document.getElementById('portfolioSummary'),
-summaryUpdate:document.getElementById('summaryUpdate'),
-connectionStatus:document.getElementById('connectionStatus'),
-alphaStatus:document.getElementById('alphaStatus'),
-hgStatus:document.getElementById('hgStatus'),
-alphaStatusText:document.getElementById('alphaStatusText'),
-hgStatusText:document.getElementById('hgStatusText')
-};
-const proxy="https://api.allorigins.win/raw?url=";
-
-function formatCurrency(v){return typeof v==="number"?new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v):"vazio";}
-function formatPercent(v){return typeof v==="number"?v.toFixed(2)+"%":"vazio";}
-function formatVolume(v){return typeof v==="number"?v>=1e6?(v/1e6).toFixed(2)+"M":v>=1e3?(v/1e3).toFixed(2)+"K":v.toString():"vazio";}
-
-async function fetchHGBrasil(){
-    try{
-        const url=`https://api.hgbrasil.com/finance/stock_price?key=${config.hgBrasilKey}&symbol=${tickers.join(',')}`;
-        const res=await fetch(proxy+encodeURIComponent(url));
-        const data=await res.json();
-        tickers.forEach(t=>{
-            const info=data.results&&data.results[t]?data.results[t]:null;
-            fiis[t].price=info&&info.price?info.price:fiis[t].price;
-            fiis[t].variation=info&&info.change_percent?info.change_percent:fiis[t].variation;
-            fiis[t].volume=info&&info.volume?info.volume:fiis[t].volume;
-            fiis[t].source="HG Brasil";
-        });
-        elements.hgStatus.classList.add('status-active');
-        elements.hgStatus.classList.remove('status-inactive');
-        elements.hgStatusText.textContent="Conectada";
-    }catch(e){
-        console.error("HG Brasil erro:",e);
-        elements.hgStatus.classList.remove('status-active');
-        elements.hgStatus.classList.add('status-inactive');
-        elements.hgStatusText.textContent="Erro";
-    }
-}
-
-async function fetchAlphaVantage(){
-    for(const t of tickers){
-        try{
-            const url=`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${t}.SA&apikey=${config.alphaVantageKey}`;
-            const res=await fetch(proxy+encodeURIComponent(url));
-            const data=await res.json();
-            const quote=data["Global Quote"];
-            if(quote){
-                fiis[t].price=quote["05. price"]?parseFloat(quote["05. price"]):fiis[t].price;
-                fiis[t].variation=quote["10. change percent"]?parseFloat(quote["10. change percent"]):fiis[t].variation;
-                fiis[t].volume=quote["06. volume"]?parseInt(quote["06. volume"]):fiis[t].volume;
-                fiis[t].source="Alpha Vantage";
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configurações e chaves de API
+        const config = {
+            alphaVantageKey: "FED4M5E51XUFQBLO",
+            hgBrasilKey: "66b9d746",
+            autoRefresh: true,
+            refreshInterval: 300000, // 5 minutos
+            apiUsage: {
+                alpha: 0,
+                hg: 0
             }
-        }catch(e){console.error("Alpha erro",t,e);}
-        await new Promise(r=>setTimeout(r,12000)); // Limite free API
-    }
-    elements.alphaStatus.classList.add('status-active');
-    elements.alphaStatus.classList.remove('status-inactive');
-    elements.alphaStatusText.textContent="Conectada";
-}
-
-function updateTable(){
-    let html="";
-    tickers.forEach(t=>{
-        const f=fiis[t];
-        const varClass=(typeof f.variation==="number"?f.variation:0)>=0?'positive':'negative';
-        const varIcon=(typeof f.variation==="number"?f.variation:0)>=0?'▲':'▼';
-        html+=`<tr>
-        <td>${t}</td>
-        <td>${formatCurrency(f.price)}</td>
-        <td class="${varClass}">${typeof f.variation==="number"?varIcon+" "+f.variation.toFixed(2)+"%":"vazio"}</td>
-        <td>${formatPercent(f.dy)}</td>
-        <td>${typeof f.pvp==="number"?f.pvp.toFixed(2):"vazio"}</td>
-        <td>${formatCurrency(f.lastIncome)}</td>
-        <td>${formatVolume(f.volume)}</td>
-        <td>${f.source}</td>
-        </tr>`;
-    });
-    elements.fiiTableBody.innerHTML=html;
-    const now=new Date();
-    elements.lastUpdate.textContent=`Última atualização: ${now.toLocaleTimeString('pt-BR')}`;
-    elements.summaryUpdate.textContent=now.toLocaleString('pt-BR');
-}
-
-function updateSummary(){
-    let totalPrice=0,totalDY=0,count=0;
-    tickers.forEach(t=>{
-        const f=fiis[t];
-        if(typeof f.price==="number"){totalPrice+=f.price;totalDY+=typeof f.dy==="number"?f.dy:0;count++;}
-    });
-    if(count>0){
-        const avgPrice=totalPrice/count;
-        const avgDY=totalDY/count;
-        let summary=`Sua carteira de ${count} FIIs tem valor médio de ${formatCurrency(avgPrice)} e DY médio de ${formatPercent(avgDY)}. `;
-        summary+=avgDY>8?"Excelente rentabilidade.":avgDY>6?"Boa rentabilidade.":"Rentabilidade abaixo do ideal.";
-        elements.portfolioSummary.textContent=summary;
-    }
-}
-
-async function fetchData(){
-    elements.connectionStatus.textContent="Conectando às APIs...";
-    await Promise.all([fetchHGBrasil(),fetchAlphaVantage()]);
-    updateTable();
-    updateSummary();
-    elements.connectionStatus.textContent="Conectado às APIs";
-}
-
-document.addEventListener('DOMContentLoaded',()=>{
-    fetchData();
-    if(config.autoRefresh) setInterval(fetchData,config.refreshInterval);
-});
-</script>
+        };
+        
+        // Dados dos fundos
+        const fiis = {
+            'GARE11': { ticker: 'GARE11', price: null, variation: null, volume: null, lastUpdate: null, source: null },
+            'CACR11': { ticker: 'CACR11', price: null, variation: null, volume: null, lastUpdate: null, source: null },
+            'KNCR11': { ticker: 'KNCR11', price: null, variation: null, volume: null, lastUpdate: null, source: null },
+            'SNEL11': { ticker: 'SNEL11', price: null, variation: null, volume: null, lastUpdate: null, source: null },
+            'XPML11': { ticker: 'XPML11', price: null, variation: null, volume: null, lastUpdate: null, source: null }
+        };
+        
+        // Elementos da DOM
+        const elements = {
+            fiiTableBody: document.getElementById('fiiTableBody'),
+            lastUpdate: document.getElementById('lastUpdate'),
+            refreshBtn: document.getElementById('refreshBtn'),
+            alphaKey: document.getElementById('alphaKey'),
+            hgKey: document.getElementById('hgKey'),
+            autoRefresh: document.getElementById('autoRefresh'),
+            saveKeysBtn: document.getElementById('saveKeysBtn'),
+            alphaStatus: document.getElementById('alphaStatus'),
+            hgStatus: document.getElementById('hgStatus'),
+            alphaStatusText: document.getElementById('alphaStatusText'),
+            hgStatusText: document.getElementById('hgStatusText'),
+            alphaStatusBadge: document.getElementById('alphaStatusBadge'),
+            hgStatusBadge: document.getElementById('hgStatusBadge'),
+            alphaUsage: document.getElementById('alphaUsage'),
+            hgUsage: document.getElementById('hgUsage'),
+            portfolioSummary: document.getElementById('portfolioSummary'),
+            summaryUpdate: document.getElementById('summaryUpdate'),
+            connectionStatus: document.getElementById('connectionStatus')
+        };
+        
+        // Função para formatar números como moeda brasileira
+        function formatCurrency(value) {
+            if (value === null || value === undefined) return "Não encontrado";
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+        
+        // Função para formatar números grandes (volume)
+        function formatVolume(value) {
+            if (value === null || value === undefined) return "Não encontrado";
+            if (value >= 1000000) {
+                return (value / 1000000).toFixed(2) + 'M';
+            } else if (value >= 1000) {
+                return (value / 1000).toFixed(2) + 'K';
+            }
+            return value.toString();
+        }
+        
+        // Função para formatar porcentagens
+        function formatPercent(value) {
+            if (value === null || value === undefined) return "Não encontrado";
+            return value.toFixed(2) + '%';
+        }
+        
+        // Função para formatar data
+        function formatDate(dateString) {
+            if (!dateString) return "Não encontrado";
+            const date = new Date(dateString);
+            return date.toLocaleTimeString('pt-BR');
+        }
+        
+        // Função para atualizar a tabela com os dados
+        function updateTable() {
+            let tableHTML = '';
+            let foundData = false;
+            
+            for (const [ticker, data] of Object.entries(fiis)) {
+                const variationClass = data.variation > 0 ? 'positive' : data.variation < 0 ? 'negative' : 'neutral';
+                const variationIcon = data.variation > 0 ? '▲' : data.variation < 0 ? '▼' : '';
+                
+                tableHTML += `
+                    <tr>
+                        <td><strong>${ticker}</strong></td>
+                        <td>${data.price !== null ? formatCurrency(data.price) : '<span class="not-found">Não encontrado</span>'}</td>
+                        <td class="${data.variation !== null ? variationClass : 'not-found'}">
+                            ${data.variation !== null ? `${variationIcon} ${Math.abs(data.variation).toFixed(2)}%` : 'Não encontrado'}
+                        </td>
+                        <td>${data.volume !== null ? formatVolume(data.volume) : '<span class="not-found">Não encontrado</span>'}</td>
+                        <td>${data.lastUpdate !== null ? formatDate(data.lastUpdate) : '<span class="not-found">Não encontrado</span>'}</td>
+                        <td>${data.source !== null ? `<span class="badge bg-info">${data.source}</span>` : '<span class="not-found">Não encontrado</span>'}</td>
+                    </tr>
+                `;
+                
+                if (data.price !== null) foundData = true;
+            }
+            
+            if (!foundData) {
+                tableHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i> Nenhum dado encontrado nas APIs
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            elements.fiiTableBody.innerHTML = tableHTML;
+            
+            // Atualizar o horário da última atualização
+            const now = new Date();
+            elements.lastUpdate.textContent = `Última atualização: ${now.toLocaleTimeString('pt-BR')}`;
+            elements.summaryUpdate.textContent = now.toLocaleTimeString('pt-BR');
+        }
+        
+        // Função para buscar dados da Alpha Vantage
+        async function fetchAlphaVantageData() {
+            const tickers = Object.keys(fiis);
+            let successCount = 0;
+            
+            for (const ticker of tickers) {
+                // A Alpha Vantage usa o sufixo .SA para ações brasileiras
+                const symbol = `${ticker}.SA`;
+                const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${config.alphaVantageKey}`;
+                
+                try {
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Erro HTTP: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data['Global Quote'] && data['Global Quote']['05. price']) {
+                        const quote = data['Global Quote'];
+                        fiis[ticker].price = parseFloat(quote['05. price']);
+                        fiis[ticker].variation = parseFloat(quote['10. change percent']?.replace('%', '') || 0);
+                        fiis[ticker].volume = parseInt(quote['06. volume'] || 0);
+                        fiis[ticker].lastUpdate = quote['07. latest trading day'] ? new Date(quote['07. latest trading day']).toISOString() : new Date().toISOString();
+                        fiis[ticker].source = 'Alpha Vantage';
+                        successCount++;
+                    }
+                } catch (error) {
+                    console.error(`Erro ao buscar dados da Alpha Vantage para ${ticker}:`, error);
+                }
+                
+                // Respeitar o limite de 5 requisições por minuto (plano free)
+                await new Promise(resolve => setTimeout(resolve, 12000));
+            }
+            
+            // Atualizar status da API
+            if (successCount > 0) {
+                elements.alphaStatus.classList.remove('status-inactive', 'status-warning');
+                elements.alphaStatus.classList.add('status-active');
+                elements.alphaStatusText.textContent = `Conectada (${successCount} de ${tickers.length} fundos)`;
+                elements.alphaStatusBadge.textContent = 'Conectada';
+                elements.alphaStatusBadge.classList.remove('bg-danger', 'bg-warning');
+                elements.alphaStatusBadge.classList.add('bg-success');
+            } else {
+                elements.alphaStatus.classList.remove('status-active', 'status-warning');
+                elements.alphaStatus.classList.add('status-inactive');
+                elements.alphaStatusText.textContent = 'Erro ao conectar';
+                elements.alphaStatusBadge.textContent = 'Erro';
+                elements.alphaStatusBadge.classList.remove('bg-success', 'bg-warning');
+                elements.alphaStatusBadge.classList.add('bg-danger');
+            }
+            
+            // Atualizar uso da API (simulado)
+            config.apiUsage.alpha = Math.min(100, config.apiUsage.alpha + 15);
+            elements.alphaUsage.style.width = `${config.apiUsage.alpha}%`;
+            elements.alphaUsage.textContent = `${config.apiUsage.alpha}%`;
+            
+            if (config.apiUsage.alpha > 80) {
+                elements.alphaUsage.classList.add('bg-danger');
+                elements.alphaUsage.classList.remove('bg-warning', 'bg-success');
+            } else if (config.apiUsage.alpha > 60) {
+                elements.alphaUsage.classList.add('bg-warning');
+                elements.alphaUsage.classList.remove('bg-danger', 'bg-success');
+            } else {
+                elements.alphaUsage.classList.add('bg-success');
+                elements.alphaUsage.classList.remove('bg-danger', 'bg-warning');
+            }
+            
+            updateTable();
+            updatePortfolioSummary();
+        }
+        
+        // Função para buscar dados da HG Brasil
+        async function fetchHGBrasilData() {
+            const tickers = Object.keys(fiis).join(',');
+            const url = `https://api.hgbrasil.com/finance/stock_price?key=${config.hgBrasilKey}&symbol=${tickers}`;
+            let successCount = 0;
+            
+            try {
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.results) {
+                    for (const [ticker, info] of Object.entries(data.results)) {
+                        if (fiis[ticker] && info.price) {
+                            fiis[ticker].price = info.price;
+                            fiis[ticker].variation = info.change_percent || 0;
+                            fiis[ticker].volume = info.volume || 0;
+                            fiis[ticker].lastUpdate = info.updated_at || new Date().toISOString();
+                            fiis[ticker].source = 'HG Brasil';
+                            successCount++;
+                        }
+                    }
+                }
+                
+                // Atualizar status da API
+                if (successCount > 0) {
+                    elements.hgStatus.classList.remove('status-inactive', 'status-warning');
+                    elements.hgStatus.classList.add('status-active');
+                    elements.hgStatusText.textContent = `Conectada (${successCount} de ${Object.keys(fiis).length} fundos)`;
+                    elements.hgStatusBadge.textContent = 'Conectada';
+                    elements.hgStatusBadge.classList.remove('bg-danger', 'bg-warning');
+                    elements.hgStatusBadge.classList.add('bg-success');
+                } else {
+                    elements.hgStatus.classList.remove('status-active', 'status-warning');
+                    elements.hgStatus.classList.add('status-inactive');
+                    elements.hgStatusText.textContent = 'Erro ao conectar';
+                    elements.hgStatusBadge.textContent = 'Erro';
+                    elements.hgStatusBadge.classList.remove('bg-success', 'bg-warning');
+                    elements.hgStatusBadge.classList.add('bg-danger');
+                }
+            } catch (error) {
+                console.error('Erro ao buscar dados da HG Brasil:', error);
+                elements.hgStatus.classList.remove('status-active', 'status-warning');
+                elements.hgStatus.classList.add('status-inactive');
+                elements.hgStatusText.textContent = 'Erro ao conectar';
+                elements.hgStatusBadge.textContent = 'Erro';
+                elements.hgStatusBadge.classList.remove('bg-success', 'bg-warning');
+                elements.hgStatusBadge.classList.add('bg-danger');
+            }
+            
+            // Atualizar uso da API (simulado)
+            config.apiUsage.hg = Math.min(100, config.apiUsage.hg + 10);
+            elements.hgUsage.style.width = `${config.apiUsage.hg}%`;
+            elements.hgUsage.textContent = `${config.apiUsage.hg}%`;
+            
+            if (config.apiUsage.hg > 80) {
+                elements.hgUsage.classList.add('bg-danger');
+                elements.hgUsage.classList.remove('bg-warning', 'bg-success');
+            } else if (config.apiUsage.hg > 60) {
+                elements.hgUsage.classList.add('bg-warning');
+                elements.hgUsage.classList.remove('bg-danger', 'bg-success');
+            } else {
+                elements.hgUsage.classList.add('bg-success');
+                elements.hgUsage.classList.remove('bg-danger', 'bg-warning');
+            }
+            
+            updateTable();
+            updatePortfolioSummary();
+        }
+        
+        // Função para atualizar o resumo da carteira
+        function updatePortfolioSummary() {
+            let totalValue = 0;
+            let positiveStocks = 0;
+            let count = 0;
+            
+            for (const [ticker, data] of Object.entries(fiis)) {
+                if (data.price !== null) {
+                    totalValue += data.price;
+                    if (data.variation > 0) positiveStocks++;
+                    count++;
+                }
+            }
+            
+            if (count > 0) {
+                const avgPrice = totalValue / count;
+                const positivePercentage = (positiveStocks / count) * 100;
+                
+                let summary = `Sua carteira de ${count} FIIs tem um valor médio de ${formatCurrency(avgPrice)} por ativo. `;
+                summary += `${positiveStocks} de ${count} fundos (${positivePercentage.toFixed(1)}%) estão em alta. `;
+                
+                if (positivePercentage >= 60) {
+                    summary += `A carteira apresenta performance positiva.`;
+                } else if (positivePercentage >= 40) {
+                    summary += `A carteira apresenta performance mista.`;
+                } else {
+                    summary += `A carteira apresenta performance negativa.`;
+                }
+                
+                elements.portfolioSummary.textContent = summary;
+            } else {
+                elements.portfolioSummary.textContent = "Não foi possível calcular o resumo da carteira. Nenhum dado encontrado.";
+            }
+        }
+        
+        // Função para buscar dados de ambas as APIs
+        async function fetchData() {
+            elements.connectionStatus.innerHTML = '<i class="fas fa-sync-alt spinning"></i> Conectando às APIs...';
+            
+            // Executar ambas as APIs simultaneamente
+            await Promise.allSettled([
+                fetchAlphaVantageData(),
+                fetchHGBrasilData()
+            ]);
+            
+            elements.connectionStatus.innerHTML = '<i class="fas fa-wifi"></i> Conectado às APIs';
+        }
+        
+        // Configurar event listeners
+        function setupEventListeners() {
+            elements.refreshBtn.addEventListener('click', fetchData);
+            
+            elements.saveKeysBtn.addEventListener('click', function() {
+                config.alphaVantageKey = elements.alphaKey.value;
+                config.hgBrasilKey = elements.hgKey.value;
+                config.autoRefresh = elements.autoRefresh.checked;
+                
+                localStorage.setItem('fiiConfig', JSON.stringify(config));
+                
+                alert('Configurações salvas com sucesso!');
+                fetchData();
+            });
+            
+            // Toggle para mostrar/esconder chaves API
+            document.querySelectorAll('.toggle-key').forEach(button => {
+                button.addEventListener('click', function() {
+                    const input = this.previousElementSibling;
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        this.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                    } else {
+                        input.type = 'password';
+                        this.innerHTML = '<i class="fas fa-eye"></i>';
+                    }
+                });
+            });
+            
+            // Buscar dados ao carregar a página
+            fetchData();
+            
+            // Configurar atualização automática
+            if (config.autoRefresh) {
+                setInterval(fetchData, config.refreshInterval);
+            }
+        }
+        
+        // Carregar configurações salvas
+        function loadConfig() {
+            const savedConfig = localStorage.getItem('fiiConfig');
+            if (savedConfig) {
+                const parsedConfig = JSON.parse(savedConfig);
+                config.alphaVantageKey = parsedConfig.alphaVantageKey || config.alphaVantageKey;
+                config.hgBrasilKey = parsedConfig.hgBrasilKey || config.hgBrasilKey;
+                config.autoRefresh = parsedConfig.autoRefresh !== undefined ? parsedConfig.autoRefresh : config.autoRefresh;
+                
+                elements.alphaKey.value = config.alphaVantageKey;
+                elements.hgKey.value = config.hgBrasilKey;
+                elements.autoRefresh.checked = config.autoRefresh;
+            }
+        }
+        
+        // Inicializar a aplicação
+        function init() {
+            loadConfig();
+            setupEventListeners();
+            updateTable();
+        }
+        
+        // Iniciar quando o documento estiver pronto
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
