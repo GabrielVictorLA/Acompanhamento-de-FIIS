@@ -3,223 +3,128 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fundos Imobiliários - Dados em Tempo Real</title>
+<title>FIIs - Tempo Real</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root { --primary-color:#2c3e50; --secondary-color:#3498db; --light-color:#ecf0f1; }
-body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background-color:#f8f9fa; color:#333; padding-top:20px; }
-.header { background: linear-gradient(135deg,var(--primary-color),var(--secondary-color)); color:white; padding:20px; border-radius:10px; margin-bottom:25px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
-.badge-status { font-size:0.9rem; margin:2px; padding:6px 10px; border-radius:6px; }
-.positive { color:#27ae60; font-weight:600; }
-.negative { color:#e74c3c; font-weight:600; }
-.summary-card { background-color: var(--light-color); border-left:4px solid var(--secondary-color);}
-.loading { display:inline-block; width:20px; height:20px; border:3px solid rgba(255,255,255,.3); border-radius:50%; border-top-color:#fff; animation:spin 1s ease-in-out infinite;}
-@keyframes spin { to { transform: rotate(360deg); } }
+body { font-family: Arial, sans-serif; background:#f8f9fa; padding:20px; }
+.header { background:#2c3e50; color:white; padding:20px; border-radius:10px; text-align:center; }
+.badge-status { margin:2px; padding:6px 10px; border-radius:6px; }
+.chart-container { background:white; border-radius:10px; padding:15px; margin-bottom:20px; }
 </style>
 </head>
 <body>
 <div class="container">
-    <div class="header text-center">
-        <h1><i class="fas fa-chart-line me-2"></i>Fundos Imobiliários em Tempo Real</h1>
-        <p class="lead">Dados integrados de múltiplas APIs</p>
-
-        <!-- Tickers -->
-        <div class="mt-3">
-            <span class="badge bg-primary">GARE11</span>
-            <span class="badge bg-success">CACR11</span>
-            <span class="badge bg-danger">KNCR11</span>
-            <span class="badge bg-warning text-dark">SNEL11</span>
-            <span class="badge bg-purple">XPML11</span>
+    <div class="header">
+        <h2>📊 FIIs em Tempo Real</h2>
+        <div id="apiStatus">
+            <span class="badge-status bg-secondary">Alpha Vantage</span>
+            <span class="badge-status bg-secondary">HG Brasil</span>
         </div>
-
-        <!-- Status das APIs -->
-        <div class="mt-3" id="apiStatus">
-            <span class="badge-status bg-secondary"><i class="fas fa-circle-notch fa-spin"></i> Alpha Vantage</span>
-            <span class="badge-status bg-secondary"><i class="fas fa-circle-notch fa-spin"></i> HG Brasil</span>
-        </div>
-
-        <p class="last-update mt-2" id="lastUpdate">Última atualização: carregando...</p>
+        <p id="lastUpdate">Última atualização: -</p>
+        <button class="btn btn-warning mt-2" onclick="fetchData()">🔄 Atualizar Agora</button>
     </div>
 
-    <!-- Tabela -->
-    <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>Ticker</th>
-                    <th>Preço (R$)</th>
-                    <th>Variação</th>
-                    <th>DY (%)</th>
-                    <th>P/VP</th>
-                    <th>Último Rend.</th>
-                    <th>Volume</th>
-                    <th>Fonte</th>
-                </tr>
-            </thead>
-            <tbody id="fiiTableBody">
-                <tr>
-                    <td colspan="8" class="text-center py-4">
-                        <div class="d-flex justify-content-center align-items-center">
-                            <div class="loading me-2"></div>
-                            <span>Carregando dados...</span>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <table class="table table-striped mt-3">
+        <thead><tr><th>Ticker</th><th>Preço</th><th>Variação</th><th>Fonte</th></tr></thead>
+        <tbody id="fiiTableBody"><tr><td colspan="4">Carregando...</td></tr></tbody>
+    </table>
 
-    <!-- Resumo -->
-    <div class="card summary-card mt-4">
-        <div class="card-body">
-            <h4 class="card-title"><i class="fas fa-lightbulb me-2"></i>Resumo da Carteira</h4>
-            <p class="card-text" id="portfolioSummary">Carregando análise da carteira...</p>
-            <p class="last-update">Análise atualizada: <span id="summaryUpdate">carregando...</span></p>
-        </div>
-    </div>
-
-    <footer class="text-center mt-4">
-        <p id="connectionStatus"><i class="fas fa-wifi"></i> Conectando às APIs...</p>
-        <p>© 2025 - Análise de Fundos Imobiliários em Tempo Real</p>
-    </footer>
+    <div id="charts"></div>
 </div>
 
 <script>
 const config = {
     alphaVantageKey: "FED4M5E51XUFQBLO",
-    hgBrasilKey: "66b9d746",
-    autoRefresh: true,
-    refreshInterval: 300000
+    hgBrasilKey: "66b9d746"
 };
-
 const tickers = ["GARE11","CACR11","KNCR11","SNEL11","XPML11"];
-const fiis = {};
-tickers.forEach(t => { fiis[t] = {price:"vazio", variation:"vazio", dy:"vazio", pvp:"vazio", lastIncome:"vazio", volume:"vazio", source:"vazio"}; });
+const fiis = {}; tickers.forEach(t => fiis[t] = {price:"vazio", variation:"vazio", source:"-"});
+const proxies = ["https://corsproxy.io/?","https://api.allorigins.win/raw?url="];
+const charts = {}; const chartData = {}; tickers.forEach(t=>chartData[t]={labels:[],values:[]});
 
-const proxies = [
-    "https://corsproxy.io/?",
-    "https://api.allorigins.win/raw?url=",
-    "https://thingproxy.freeboard.io/fetch/"
-];
-
-// Atualiza status visual das APIs
-function setApiStatus(api, success) {
-    const el = document.querySelector(`#apiStatus span:nth-child(${api === "alpha" ? 1 : 2})`);
-    if (success) {
-        el.className = "badge-status bg-success";
-        el.innerHTML = `<i class="fas fa-check-circle"></i> ${api === "alpha" ? "Alpha Vantage" : "HG Brasil"}`;
-    } else {
-        el.className = "badge-status bg-danger";
-        el.innerHTML = `<i class="fas fa-times-circle"></i> ${api === "alpha" ? "Alpha Vantage" : "HG Brasil"}`;
-    }
+function setApiStatus(api, ok) {
+    const span = document.querySelector(`#apiStatus span:nth-child(${api==="alpha"?1:2})`);
+    span.className = "badge-status " + (ok?"bg-success":"bg-danger");
+    span.textContent = (api==="alpha"?"Alpha Vantage":"HG Brasil") + (ok?" ✅":" ❌");
 }
-
-// Proxy handler
 async function fetchWithProxies(url) {
     for (let proxy of proxies) {
         try {
-            const res = await fetch(proxy + encodeURIComponent(url));
+            const res = await fetch(proxy+encodeURIComponent(url));
             if (res.ok) return await res.json();
         } catch {}
     }
-    throw new Error("Todos os proxies falharam: " + url);
+    throw new Error("Falha em todos os proxies");
 }
-
-// HG Brasil
 async function fetchHGBrasil() {
     try {
-        const url = `https://api.hgbrasil.com/finance/stock_price?key=${config.hgBrasilKey}&symbol=${tickers.join(',')}`;
+        const url = `https://api.hgbrasil.com/finance/stock_price?key=${config.hgBrasilKey}&symbol=${tickers.join(",")}`;
         const data = await fetchWithProxies(url);
-        let success = 0;
-        tickers.forEach(t => {
-            const info = data.results && data.results[t] ? data.results[t] : null;
-            if (info && info.price) {
-                fiis[t].price = info.price;
-                fiis[t].variation = info.change_percent || fiis[t].variation;
-                fiis[t].volume = info.volume || fiis[t].volume;
-                fiis[t].source = "HG Brasil";
-                success++;
+        let ok=0;
+        tickers.forEach(t=>{
+            if(data.results && data.results[t] && data.results[t].price){
+                fiis[t].price=data.results[t].price;
+                fiis[t].variation=data.results[t].change_percent;
+                fiis[t].source="HG Brasil"; ok++;
             }
         });
-        setApiStatus("hg", success > 0);
-    } catch {
-        setApiStatus("hg", false);
-    }
+        setApiStatus("hg",ok>0);
+    } catch{ setApiStatus("hg",false); }
 }
-
-// Alpha Vantage
 async function fetchAlphaVantage() {
-    let success = 0;
-    for (const t of tickers) {
-        try {
-            const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${t}.SA&apikey=${config.alphaVantageKey}`;
-            const data = await fetchWithProxies(url);
-            const quote = data["Global Quote"];
-            if (quote && quote["05. price"]) {
-                fiis[t].price = parseFloat(quote["05. price"]);
-                fiis[t].variation = parseFloat(quote["10. change percent"]) || fiis[t].variation;
-                fiis[t].volume = parseInt(quote["06. volume"]) || fiis[t].volume;
-                fiis[t].source = "Alpha Vantage";
-                success++;
+    let ok=0;
+    for(const t of tickers){
+        try{
+            const url=`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${t}.SA&apikey=${config.alphaVantageKey}`;
+            const data=await fetchWithProxies(url);
+            const q=data["Global Quote"];
+            if(q && q["05. price"]){
+                fiis[t].price=parseFloat(q["05. price"]);
+                fiis[t].variation=parseFloat(q["10. change percent"]);
+                fiis[t].source="Alpha Vantage"; ok++;
             }
-        } catch {}
-        await new Promise(r => setTimeout(r, 12000)); // limite rate
+        }catch{}
+        await new Promise(r=>setTimeout(r,12000));
     }
-    setApiStatus("alpha", success > 0);
+    setApiStatus("alpha",ok>0);
 }
-
-// Atualiza tabela
-function updateTable() {
-    let html = "";
-    tickers.forEach(t => {
-        const f = fiis[t];
-        const varClass = (typeof f.variation === "number" ? f.variation : 0) >= 0 ? 'positive' : 'negative';
-        const varIcon = (typeof f.variation === "number" ? f.variation : 0) >= 0 ? '▲' : '▼';
-        html += `<tr>
-            <td>${t}</td>
-            <td>${typeof f.price === "number" ? f.price.toFixed(2) : "vazio"}</td>
-            <td class="${varClass}">${typeof f.variation === "number" ? varIcon+" "+f.variation.toFixed(2)+"%" : "vazio"}</td>
-            <td>${f.dy}</td>
-            <td>${f.pvp}</td>
-            <td>${f.lastIncome}</td>
-            <td>${f.volume}</td>
-            <td>${f.source}</td>
-        </tr>`;
+function updateTable(){
+    let html="";
+    tickers.forEach(t=>{
+        html+=`<tr><td>${t}</td><td>${typeof fiis[t].price==="number"?fiis[t].price.toFixed(2):"vazio"}</td><td>${fiis[t].variation||"vazio"}</td><td>${fiis[t].source}</td></tr>`;
     });
-    document.getElementById("fiiTableBody").innerHTML = html;
-    document.getElementById("lastUpdate").textContent = "Última atualização: " + new Date().toLocaleTimeString("pt-BR");
-    document.getElementById("summaryUpdate").textContent = new Date().toLocaleString("pt-BR");
+    document.getElementById("fiiTableBody").innerHTML=html;
+    document.getElementById("lastUpdate").textContent="Última atualização: "+new Date().toLocaleTimeString("pt-BR");
 }
-
-// Resumo
-function updateSummary() {
-    let total = 0, count = 0;
-    tickers.forEach(t => {
-        if (typeof fiis[t].price === "number") {
-            total += fiis[t].price;
-            count++;
+function createCharts(){
+    const container=document.getElementById("charts");
+    tickers.forEach(t=>{
+        const div=document.createElement("div");
+        div.className="chart-container";
+        div.innerHTML=`<h5>${t}</h5><canvas id="chart-${t}"></canvas>`;
+        container.appendChild(div);
+        charts[t]=new Chart(document.getElementById(`chart-${t}`),{type:"line",data:{labels:[],datasets:[{label:"Preço",data:[],borderColor:"#007bff"}]}});
+    });
+}
+function updateCharts(){
+    const now=new Date().toLocaleTimeString("pt-BR");
+    tickers.forEach(t=>{
+        if(typeof fiis[t].price==="number"){
+            chartData[t].labels.push(now);
+            chartData[t].values.push(fiis[t].price);
+            if(chartData[t].labels.length>20){chartData[t].labels.shift();chartData[t].values.shift();}
+            charts[t].data.labels=chartData[t].labels;
+            charts[t].data.datasets[0].data=chartData[t].values;
+            charts[t].update();
         }
     });
-    if (count > 0) {
-        const avg = total / count;
-        document.getElementById("portfolioSummary").textContent =
-            `Sua carteira de ${count} FIIs tem preço médio de R$ ${avg.toFixed(2)}.`;
-    }
 }
-
-async function fetchData() {
-    document.getElementById("connectionStatus").textContent = "Conectando às APIs...";
-    await Promise.all([fetchHGBrasil(), fetchAlphaVantage()]);
-    updateTable();
-    updateSummary();
-    document.getElementById("connectionStatus").textContent = "Conectado às APIs";
+async function fetchData(){
+    await Promise.all([fetchHGBrasil(),fetchAlphaVantage()]);
+    updateTable(); updateCharts();
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-    fetchData();
-    if (config.autoRefresh) setInterval(fetchData, config.refreshInterval);
-});
+document.addEventListener("DOMContentLoaded",()=>{createCharts();fetchData();});
 </script>
 </body>
 </html>
