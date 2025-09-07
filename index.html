@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portfólio Multi-API</title>
+<title>Portfólio Multi-API Seguro</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body { font-family: Arial; background: #f4f4f4; padding: 20px; }
@@ -22,7 +22,7 @@ th { background:#eee; }
 </head>
 <body>
 
-<h1>Portfólio Multi-API</h1>
+<h1>Portfólio Multi-API Seguro</h1>
 
 <h2>Ações</h2>
 <div class="container" id="stocksContainer"></div>
@@ -46,9 +46,9 @@ th { background:#eee; }
 const apiKeys = {
     alphaVantage: 'FED4M5E51XUFQBLO',
     hgBrasil: '66b9d746',
-    brapi: 'SUA_BAPI_KEY_AQUI',
-    twelveData: 'SUA_TWELVE_DATA_KEY_AQUI',
-    marketstack: 'SUA_MARKETSTACK_KEY_AQUI'
+    brapi: '', // opcional
+    twelveData: '', // opcional
+    marketstack: '' // opcional
 };
 
 const tickers = [
@@ -58,78 +58,119 @@ const tickers = [
     { type:'fii', symbol:'HGLG11' }
 ];
 
-// Funções para cada API
+// Funções seguras para cada API
 async function fetchAlphaVantage(symbol){
-    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKeys.alphaVantage}`;
-    const res = await fetch(url); const data = await res.json();
-    if(data['Global Quote']) return { price: parseFloat(data['05. price']), change: parseFloat(data['10. change percent']) };
+    try {
+        const res = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKeys.alphaVantage}`);
+        const data = await res.json();
+        const quote = data['Global Quote'];
+        if(!quote || !quote['05. price']) return null;
+        return {
+            price: parseFloat(quote['05. price']),
+            change: parseFloat(quote['10. change percent']?.replace('%','')) || 0
+        };
+    } catch { return null; }
 }
 
 async function fetchHgBrasil(symbol){
-    const url = `https://api.hgbrasil.com/finance/stock_price?key=${apiKeys.hgBrasil}&symbol=${symbol}`;
-    const res = await fetch(url); const data = await res.json();
-    if(data.results && data.results[symbol]) return { price: parseFloat(data.results[symbol].price), change: parseFloat(data.results[symbol].change_percent) };
+    try {
+        const res = await fetch(`https://api.hgbrasil.com/finance/stock_price?key=${apiKeys.hgBrasil}&symbol=${symbol}`);
+        const data = await res.json();
+        const result = data.results ? data.results[symbol] : null;
+        if(!result) return null;
+        return {
+            price: parseFloat(result.price),
+            change: parseFloat(result.change_percent) || 0
+        };
+    } catch { return null; }
 }
 
 async function fetchBrapi(symbol){
-    const url = `https://brapi.dev/api/quote/${symbol}`;
-    const res = await fetch(url); const data = await res.json();
-    if(data.results && data.results[0]) return { price: parseFloat(data.results[0].regularMarketPrice), change: parseFloat(data.results[0].regularMarketChangePercent) };
+    if(!apiKeys.brapi) return null;
+    try {
+        const res = await fetch(`https://brapi.dev/api/quote/${symbol}`);
+        const data = await res.json();
+        if(!data.results || !data.results[0]) return null;
+        return {
+            price: parseFloat(data.results[0].regularMarketPrice),
+            change: parseFloat(data.results[0].regularMarketChangePercent) || 0
+        };
+    } catch { return null; }
 }
 
 async function fetchTwelveData(symbol){
-    const url = `https://api.twelvedata.com/price?symbol=${symbol}&apikey=${apiKeys.twelveData}`;
-    const res = await fetch(url); const data = await res.json();
-    if(data.price) return { price: parseFloat(data.price), change: 0 }; // TwelveData precisa de endpoint adicional para variação
+    if(!apiKeys.twelveData) return null;
+    try {
+        const res = await fetch(`https://api.twelvedata.com/price?symbol=${symbol}&apikey=${apiKeys.twelveData}`);
+        const data = await res.json();
+        if(!data.price) return null;
+        return { price: parseFloat(data.price), change: 0 }; // change precisa endpoint adicional
+    } catch { return null; }
 }
 
 async function fetchMarketstack(symbol){
-    const url = `https://api.marketstack.com/v1/eod?symbols=${symbol}&access_key=${apiKeys.marketstack}`;
-    const res = await fetch(url); const data = await res.json();
-    if(data.data && data.data[0]) return { price: parseFloat(data.data[0].close), change: 0 }; // Marketstack precisa calcular variação
+    if(!apiKeys.marketstack) return null;
+    try {
+        const res = await fetch(`https://api.marketstack.com/v1/eod?symbols=${symbol}&access_key=${apiKeys.marketstack}`);
+        const data = await res.json();
+        if(!data.data || !data.data[0]) return null;
+        const close = parseFloat(data.data[0].close);
+        const open = parseFloat(data.data[0].open);
+        const change = ((close - open)/open * 100) || 0;
+        return { price: close, change };
+    } catch { return null; }
 }
 
-// Função principal
+// Atualiza o portfólio
 async function updatePortfolio(){
     const stocksContainer = document.getElementById('stocksContainer');
     const fiisContainer = document.getElementById('fiisContainer');
     const tableBody = document.querySelector('#portfolioTable tbody');
-
     stocksContainer.innerHTML = ''; fiisContainer.innerHTML = ''; tableBody.innerHTML = '';
-    let chartLabels=[], chartData=[];
+    let chartLabels = [], chartData = [];
 
     for(const ticker of tickers){
-        let data;
-        // Tenta múltiplas APIs em ordem de prioridade
-        data = await fetchAlphaVantage(ticker.symbol) || await fetchHgBrasil(ticker.symbol) || await fetchBrapi(ticker.symbol) || await fetchTwelveData(ticker.symbol) || await fetchMarketstack(ticker.symbol);
+        // Tenta múltiplas APIs em ordem
+        const data = await fetchAlphaVantage(ticker.symbol) 
+                  || await fetchHgBrasil(ticker.symbol)
+                  || await fetchBrapi(ticker.symbol)
+                  || await fetchTwelveData(ticker.symbol)
+                  || await fetchMarketstack(ticker.symbol);
+
         if(!data) continue;
 
         chartLabels.push(ticker.symbol); chartData.push(data.price);
 
-        const cardHtml = `<div class="card"><h2>${ticker.symbol}</h2><div class="price">R$ ${data.price.toFixed(2)}</div><div class="change ${data.change>=0?'positive':'negative'}">${data.change>=0?'+':''}${data.change}%</div></div>`;
+        const cardHtml = `<div class="card"><h2>${ticker.symbol}</h2>
+                          <div class="price">R$ ${data.price.toFixed(2)}</div>
+                          <div class="change ${data.change>=0?'positive':'negative'}">${data.change>=0?'+':''}${data.change.toFixed(2)}%</div></div>`;
         if(ticker.type==='stock') stocksContainer.innerHTML += cardHtml;
         else fiisContainer.innerHTML += cardHtml;
 
-        tableBody.innerHTML += `<tr><td>${ticker.symbol}</td><td>R$ ${data.price.toFixed(2)}</td><td class="${data.change>=0?'positive':'negative'}">${data.change}%</td><td>${ticker.type.toUpperCase()}</td></tr>`;
+        tableBody.innerHTML += `<tr><td>${ticker.symbol}</td>
+                                <td>R$ ${data.price.toFixed(2)}</td>
+                                <td class="${data.change>=0?'positive':'negative'}">${data.change.toFixed(2)}%</td>
+                                <td>${ticker.type.toUpperCase()}</td></tr>`;
     }
 
     renderChart(chartLabels, chartData);
 }
 
+// Renderiza gráfico
 let chart;
 function renderChart(labels,data){
     const ctx = document.getElementById('priceChart').getContext('2d');
     if(chart) chart.destroy();
     chart = new Chart(ctx,{
         type:'bar',
-        data:{ labels:labels, datasets:[{ label:'Preço (R$)', data:data, backgroundColor:data.map(d=>'rgba(0,128,0,0.6)'), borderColor:'green', borderWidth:1 }] },
+        data:{ labels, datasets:[{ label:'Preço (R$)', data, backgroundColor:data.map(d=>'rgba(0,128,0,0.6)'), borderColor:'green', borderWidth:1 }] },
         options:{ responsive:true, scales:{ y:{ beginAtZero:false } } }
     });
 }
 
+// Inicializa
 updatePortfolio();
-setInterval(updatePortfolio,300000);
-
+setInterval(updatePortfolio,300000); // 5 minutos
 </script>
 </body>
 </html>
