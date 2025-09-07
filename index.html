@@ -1,769 +1,486 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fundos Imobiliários - Dados em Tempo Real</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --accent-color: #e74c3c;
-            --light-color: #ecf0f1;
-            --dark-color: #34495e;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
-            padding-top: 20px;
-            -webkit-text-size-adjust: 100%;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .card {
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease;
-            margin-bottom: 20px;
-            border: none;
-            overflow: hidden;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-        }
-        
-        .card-header {
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 10px 10px 0 0 !important;
-            font-weight: 600;
-            padding: 15px;
-        }
-        
-        .table-responsive {
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th {
-            background-color: var(--secondary-color);
-            color: white;
-            position: sticky;
-            top: 0;
-            padding: 12px 10px;
-            font-size: 0.9rem;
-        }
-        
-        td {
-            padding: 12px 10px;
-            border-bottom: 1px solid #dee2e6;
-        }
-        
-        .table-hover tbody tr:hover {
-            background-color: rgba(52, 152, 219, 0.1);
-        }
-        
-        .positive {
-            color: #27ae60;
-            font-weight: 600;
-        }
-        
-        .negative {
-            color: #e74c3c;
-            font-weight: 600;
-        }
-        
-        .neutral {
-            color: #f39c12;
-            font-weight: 600;
-        }
-        
-        .not-found {
-            color: #7f8c8d;
-            font-style: italic;
-        }
-        
-        .summary-card {
-            background-color: var(--light-color);
-            border-left: 4px solid var(--secondary-color);
-        }
-        
-        .progress {
-            height: 8px;
-            margin-bottom: 5px;
-        }
-        
-        .filter-section {
-            background-color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-        }
-        
-        .ticker-label {
-            font-weight: bold;
-            padding: 5px 10px;
-            border-radius: 5px;
-            color: white;
-            display: inline-block;
-            margin-right: 5px;
-            margin-bottom: 5px;
-            font-size: 0.85rem;
-        }
-        
-        footer {
-            text-align: center;
-            padding: 20px;
-            margin-top: 30px;
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-        
-        .btn-ios {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 20px;
-            font-weight: 600;
-            margin: 10px 0;
-            display: inline-block;
-            text-align: center;
-            width: 100%;
-        }
-        
-        .last-update {
-            font-size: 0.8rem;
-            color: #7f8c8d;
-            text-align: right;
-            margin-bottom: 10px;
-        }
-        
-        .blink {
-            animation: blink-animation 2s infinite;
-        }
-        
-        .api-status {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
-        
-        .status-active {
-            background-color: #27ae60;
-        }
-        
-        .status-inactive {
-            background-color: #e74c3c;
-        }
-        
-        .status-warning {
-            background-color: #f39c12;
-        }
-        
-        @keyframes blink-animation {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .api-key-field {
-            font-family: monospace;
-        }
-        
-        @media (max-width: 768px) {
-            th, td {
-                padding: 8px 5px;
-                font-size: 0.8rem;
-            }
-            
-            .card {
-                margin-bottom: 15px;
-            }
-            
-            .table-responsive {
-                font-size: 0.85rem;
-                overflow-x: auto;
-            }
-            
-            .header h1 {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Fundos Imobiliários - Dados em Tempo Real</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root { --primary-color:#2c3e50; --secondary-color:#3498db; --light-color:#ecf0f1; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f8f9fa; color:#333; padding-top:20px; }
+.header { background:linear-gradient(135deg,var(--primary-color),var(--secondary-color)); color:#fff; padding:20px; border-radius:10px; margin-bottom:25px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+.table-responsive{ border-radius:10px; overflow:hidden; margin-bottom:20px; }
+.table-hover tbody tr:hover{ background-color: rgba(52,152,219,0.06); }
+.positive{ color:#27ae60; font-weight:600; } .negative{ color:#e74c3c; font-weight:600; } .not-found{ color:#7f8c8d; font-style:italic; }
+.loading{ display:inline-block; width:20px; height:20px; border:3px solid rgba(255,255,255,.3); border-radius:50%; border-top-color:#fff; animation:spin 1s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg);} }
+.badge-ticker{ font-weight:600; margin-right:6px; }
+.api-status{ display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; }
+.status-active{ background:#27ae60; } .status-inactive{ background:#e74c3c; } .status-warning{ background:#f39c12; }
+.api-key-field{ font-family: monospace; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header text-center">
-            <h1><i class="fas fa-chart-line me-2"></i>Fundos Imobiliários em Tempo Real</h1>
-            <p class="lead">Dados das APIs Alpha Vantage e HG Brasil</p>
-            <div class="mt-3">
-                <span class="ticker-label" style="background-color: #3498db;">GARE11</span>
-                <span class="ticker-label" style="background-color: #2ecc71;">CACR11</span>
-                <span class="ticker-label" style="background-color: #e74c3c;">KNCR11</span>
-                <span class="ticker-label" style="background-color: #f39c12;">SNEL11</span>
-                <span class="ticker-label" style="background-color: #9b59b6;">XPML11</span>
-            </div>
-            <div class="mt-3">
-                <span class="badge bg-success blink"><i class="fas fa-sync-alt me-1"></i> Atualizando automaticamente</span>
-                <p class="last-update" id="lastUpdate">Última atualização: carregando...</p>
-            </div>
-            <div class="mt-2">
-                <span class="badge bg-info">
-                    <span class="api-status status-active" id="alphaStatus"></span> Alpha Vantage
-                </span>
-                <span class="badge bg-info ms-2">
-                    <span class="api-status status-active" id="hgStatus"></span> HG Brasil
-                </span>
-            </div>
+<div class="container">
+  <div class="header text-center">
+    <h1><i class="fas fa-chart-line me-2"></i>Fundos Imobiliários em Tempo Real</h1>
+    <p class="lead">Dados das APIs Alpha Vantage e HG Brasil</p>
+    <div class="mt-3 mb-2">
+      <span class="badge bg-primary badge-ticker">GARE11</span>
+      <span class="badge bg-success badge-ticker">CACR11</span>
+      <span class="badge bg-danger badge-ticker">KNCR11</span>
+      <span class="badge bg-warning text-dark badge-ticker">SNEL11</span>
+      <span class="badge bg-secondary badge-ticker">XPML11</span>
+    </div>
+    <div class="mt-2 mb-1">
+      <span class="badge bg-info"><span class="api-status status-active" id="alphaStatus"></span> Alpha Vantage</span>
+      <span class="badge bg-info ms-2"><span class="api-status status-active" id="hgStatus"></span> HG Brasil</span>
+    </div>
+    <p class="last-update" id="lastUpdate">Última atualização: carregando...</p>
+  </div>
+
+  <div class="filter-section mb-4">
+    <div class="row">
+      <div class="col-md-4 mb-2">
+        <label for="sortSelect" class="form-label">Ordenar por:</label>
+        <select class="form-select" id="sortSelect">
+          <option value="ticker">Ticker</option>
+          <option value="price">Preço</option>
+          <option value="variation">Variação</option>
+          <option value="volume">Volume</option>
+        </select>
+      </div>
+      <div class="col-md-4 mb-2">
+        <label for="searchInput" class="form-label">Buscar:</label>
+        <input type="text" class="form-control" id="searchInput" placeholder="Digite o ticker...">
+      </div>
+      <div class="col-md-4 mb-2">
+        <label class="form-label">Ações:</label>
+        <div class="d-grid gap-2">
+          <button class="btn btn-primary" id="refreshBtn"><i class="fas fa-sync-alt"></i> Atualizar Agora</button>
         </div>
-        
-        <div class="filter-section mb-4">
-            <div class="row">
-                <div class="col-md-4 mb-2">
-                    <label for="sortSelect" class="form-label">Ordenar por:</label>
-                    <select class="form-select" id="sortSelect">
-                        <option value="ticker">Ticker</option>
-                        <option value="price">Preço</option>
-                        <option value="variation">Variação</option>
-                        <option value="volume">Volume</option>
-                    </select>
-                </div>
-                <div class="col-md-4 mb-2">
-                    <label for="searchInput" class="form-label">Buscar:</label>
-                    <input type="text" class="form-control" id="searchInput" placeholder="Digite o ticker...">
-                </div>
-                <div class="col-md-4 mb-2">
-                    <label class="form-label">Ações:</label>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary" id="refreshBtn">
-                            <i class="fas fa-sync-alt"></i> Atualizar Agora
-                        </button>
-                    </div>
-                </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Preço (R$)</th>
+          <th>Variação (%)</th>
+          <th>Volume</th>
+          <th>Últ. Atualização</th>
+          <th>Fonte</th>
+        </tr>
+      </thead>
+      <tbody id="fiiTableBody">
+        <tr><td colspan="6" class="text-center py-4"><div class="d-flex justify-content-center align-items-center"><div class="loading me-2"></div><span>Carregando dados das APIs...</span></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">Configurações das APIs</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Alpha Vantage API Key</label>
+            <div class="input-group">
+              <input type="password" class="form-control api-key-field" id="alphaKey" value="FED4M5E51XUFQBLO">
+              <button class="btn btn-outline-secondary toggle-key" type="button"><i class="fas fa-eye"></i></button>
             </div>
-        </div>
-        
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>Ticker</th>
-                        <th>Preço (R$)</th>
-                        <th>Variação (%)</th>
-                        <th>Volume</th>
-                        <th>Últ. Atualização</th>
-                        <th>Fonte</th>
-                    </tr>
-                </thead>
-                <tbody id="fiiTableBody">
-                    <tr>
-                        <td colspan="6" class="text-center">
-                            <div class="d-flex justify-content-center align-items-center py-4">
-                                <div class="loading me-2"></div>
-                                <span>Carregando dados das APIs...</span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Configurações das APIs</div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Alpha Vantage API Key</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control api-key-field" id="alphaKey" value="FED4M5E51XUFQBLO">
-                                <button class="btn btn-outline-secondary toggle-key" type="button">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <div class="form-text">Status: <span id="alphaStatusText">Conectando...</span></div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">HG Brasil API Key</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control api-key-field" id="hgKey" value="66b9d746">
-                                <button class="btn btn-outline-secondary toggle-key" type="button">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <div class="form-text">Status: <span id="hgStatusText">Conectando...</span></div>
-                        </div>
-                        
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
-                            <label class="form-check-label" for="autoRefresh">Atualização automática (5 min)</label>
-                        </div>
-                        
-                        <button class="btn btn-success w-100" id="saveKeysBtn">
-                            <i class="fas fa-save"></i> Salvar Configurações
-                        </button>
-                    </div>
-                </div>
+            <div class="form-text">Status: <span id="alphaStatusText">Conectando...</span></div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">HG Brasil API Key</label>
+            <div class="input-group">
+              <input type="password" class="form-control api-key-field" id="hgKey" value="66b9d746">
+              <button class="btn btn-outline-secondary toggle-key" type="button"><i class="fas fa-eye"></i></button>
             </div>
-            
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Status das APIs</div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span>Alpha Vantage</span>
-                            <span class="badge bg-success" id="alphaStatusBadge">Conectando...</span>
-                        </div>
-                        <div class="progress mb-4">
-                            <div class="progress-bar" id="alphaUsage" style="width: 0%">0%</div>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span>HG Brasil</span>
-                            <span class="badge bg-success" id="hgStatusBadge">Conectando...</span>
-                        </div>
-                        <div class="progress mb-4">
-                            <div class="progress-bar" id="hgUsage" style="width: 0%">0%</div>
-                        </div>
-                        
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> Dados são buscados de ambas as APIs simultaneamente
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div class="form-text">Status: <span id="hgStatusText">Conectando...</span></div>
+          </div>
+
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+            <label class="form-check-label" for="autoRefresh">Atualização automática (5 min)</label>
+          </div>
+
+          <button class="btn btn-success w-100" id="saveKeysBtn"><i class="fas fa-save"></i> Salvar Configurações</button>
         </div>
-        
-        <div class="card summary-card mt-4">
-            <div class="card-body">
-                <h4 class="card-title"><i class="fas fa-lightbulb me-2"></i>Resumo da Carteira</h4>
-                <p class="card-text" id="portfolioSummary">Carregando análise da carteira...</p>
-                <p class="last-update">Última atualização: <span id="summaryUpdate">carregando...</span></p>
-            </div>
-        </div>
-        
-        <footer>
-            <p id="connectionStatus"><i class="fas fa-wifi"></i> Conectando às APIs...</p>
-            <p>© 2023 - Análise de Fundos Imobiliários em Tempo Real</p>
-        </footer>
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Configurações e chaves de API
-        const config = {
-            alphaVantageKey: "FED4M5E51XUFQBLO",
-            hgBrasilKey: "66b9d746",
-            autoRefresh: true,
-            refreshInterval: 300000, // 5 minutos
-            apiUsage: {
-                alpha: 0,
-                hg: 0
-            }
-        };
-        
-        // Dados dos fundos
-        const fiis = {
-            'GARE11': { ticker: 'GARE11', price: null, variation: null, volume: null, lastUpdate: null, source: null },
-            'CACR11': { ticker: 'CACR11', price: null, variation: null, volume: null, lastUpdate: null, source: null },
-            'KNCR11': { ticker: 'KNCR11', price: null, variation: null, volume: null, lastUpdate: null, source: null },
-            'SNEL11': { ticker: 'SNEL11', price: null, variation: null, volume: null, lastUpdate: null, source: null },
-            'XPML11': { ticker: 'XPML11', price: null, variation: null, volume: null, lastUpdate: null, source: null }
-        };
-        
-        // Elementos da DOM
-        const elements = {
-            fiiTableBody: document.getElementById('fiiTableBody'),
-            lastUpdate: document.getElementById('lastUpdate'),
-            refreshBtn: document.getElementById('refreshBtn'),
-            alphaKey: document.getElementById('alphaKey'),
-            hgKey: document.getElementById('hgKey'),
-            autoRefresh: document.getElementById('autoRefresh'),
-            saveKeysBtn: document.getElementById('saveKeysBtn'),
-            alphaStatus: document.getElementById('alphaStatus'),
-            hgStatus: document.getElementById('hgStatus'),
-            alphaStatusText: document.getElementById('alphaStatusText'),
-            hgStatusText: document.getElementById('hgStatusText'),
-            alphaStatusBadge: document.getElementById('alphaStatusBadge'),
-            hgStatusBadge: document.getElementById('hgStatusBadge'),
-            alphaUsage: document.getElementById('alphaUsage'),
-            hgUsage: document.getElementById('hgUsage'),
-            portfolioSummary: document.getElementById('portfolioSummary'),
-            summaryUpdate: document.getElementById('summaryUpdate'),
-            connectionStatus: document.getElementById('connectionStatus')
-        };
-        
-        // Função para formatar números como moeda brasileira
-        function formatCurrency(value) {
-            if (value === null || value === undefined) return "Não encontrado";
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">Status das APIs</div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span>Alpha Vantage</span>
+            <span class="badge bg-secondary" id="alphaStatusBadge">Conectando...</span>
+          </div>
+          <div class="progress mb-4"><div class="progress-bar" id="alphaUsage" style="width:0%">0%</div></div>
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span>HG Brasil</span>
+            <span class="badge bg-secondary" id="hgStatusBadge">Conectando...</span>
+          </div>
+          <div class="progress mb-4"><div class="progress-bar" id="hgUsage" style="width:0%">0%</div></div>
+
+          <div class="alert alert-info"><i class="fas fa-info-circle"></i> Dados são buscados de ambas as APIs simultaneamente (HG Brasil tem prioridade visual se disponível)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card summary-card mt-4">
+    <div class="card-body">
+      <h4 class="card-title"><i class="fas fa-lightbulb me-2"></i>Resumo da Carteira</h4>
+      <p class="card-text" id="portfolioSummary">Carregando análise da carteira...</p>
+      <p class="last-update">Última atualização: <span id="summaryUpdate">carregando...</span></p>
+    </div>
+  </div>
+
+  <footer class="mt-4 mb-4 text-center">
+    <p id="connectionStatus"><i class="fas fa-wifi"></i> Conectando às APIs...</p>
+    <p>© 2025 - Análise de Fundos Imobiliários em Tempo Real</p>
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ---------- Configuração inicial (mantive suas chaves como antes) ---------- */
+const config = {
+  alphaVantageKey: "FED4M5E51XUFQBLO",
+  hgBrasilKey: "66b9d746",
+  autoRefresh: true,
+  refreshInterval: 300000,
+  apiUsage: { alpha: 0, hg: 0 }
+};
+const tickers = ["GARE11","CACR11","KNCR11","SNEL11","XPML11"];
+
+/* estrutura dos FIIs (campos finais + intermediários) */
+const fiis = {};
+tickers.forEach(t => {
+  fiis[t] = {
+    price: null, variation: null, volume: null, lastUpdate: null, source: null,
+    // campos por API (para merge)
+    priceHG: null, variationHG: null, volumeHG: null, updatedHG: null,
+    priceAV: null, variationAV: null, volumeAV: null, updatedAV: null
+  };
+});
+
+/* DOM elements (mantidos) */
+const elements = {
+  fiiTableBody: document.getElementById('fiiTableBody'),
+  lastUpdate: document.getElementById('lastUpdate'),
+  alphaKey: document.getElementById('alphaKey'),
+  hgKey: document.getElementById('hgKey'),
+  autoRefresh: document.getElementById('autoRefresh'),
+  saveKeysBtn: document.getElementById('saveKeysBtn'),
+  refreshBtn: document.getElementById('refreshBtn'),
+  alphaStatus: document.getElementById('alphaStatus'),
+  hgStatus: document.getElementById('hgStatus'),
+  alphaStatusText: document.getElementById('alphaStatusText'),
+  hgStatusText: document.getElementById('hgStatusText'),
+  alphaStatusBadge: document.getElementById('alphaStatusBadge'),
+  hgStatusBadge: document.getElementById('hgStatusBadge'),
+  alphaUsage: document.getElementById('alphaUsage'),
+  hgUsage: document.getElementById('hgUsage'),
+  portfolioSummary: document.getElementById('portfolioSummary'),
+  summaryUpdate: document.getElementById('summaryUpdate'),
+  connectionStatus: document.getElementById('connectionStatus'),
+  refreshBtnEl: document.getElementById('refreshBtn'),
+  toggleKeyButtons: document.querySelectorAll('.toggle-key')
+};
+
+/* --------- formatações --------- */
+function formatCurrency(v){ if (v === null || v === undefined) return '<span class="not-found">Não encontrado</span>'; return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v); }
+function formatPercent(v){ if (v === null || v === undefined) return '<span class="not-found">Não encontrado</span>'; return v.toFixed(2) + '%'; }
+function formatVolume(v){ if (v === null || v === undefined) return '<span class="not-found">Não encontrado</span>'; if (v >= 1e6) return (v/1e6).toFixed(2)+'M'; if (v >= 1e3) return (v/1e3).toFixed(2)+'K'; return v.toString(); }
+
+/* ---------- tentativa de fetch com fallback de proxies (CORS) ---------- */
+async function fetchWithCorsFallback(url, options = {}) {
+  const proxies = ['', 'https://api.allorigins.win/raw?url=', 'https://thingproxy.freeboard.io/fetch/'];
+  for (const proxyPrefix of proxies) {
+    const fullUrl = proxyPrefix ? proxyPrefix + encodeURIComponent(url) : url;
+    try {
+      // timeout controller
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(fullUrl, { ...options, signal: controller.signal });
+      clearTimeout(id);
+      if (!res.ok) {
+        console.warn('fetch non-ok', fullUrl, res.status);
+        continue;
+      }
+      // tentar parse seguro: se content-type JSON, usar json(); senão tentar json.parse do text
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        return await res.json();
+      } else {
+        const text = await res.text();
+        try { return JSON.parse(text); } catch(e) { return text; }
+      }
+    } catch (err) {
+      console.warn('fetch failed for', fullUrl, err && err.message ? err.message : err);
+      // tenta próximo proxy
+    }
+  }
+  // todas falharam
+  throw new Error('Todas tentativas de fetch falharam (direto + proxies públicos)');
+}
+
+/* ---------- HG Brasil (busca em lote) ---------- */
+async function fetchHGBrasilData() {
+  const url = `https://api.hgbrasil.com/finance/stock_price?key=${config.hgBrasilKey}&symbol=${tickers.join(',')}`;
+  let successCount = 0;
+  try {
+    const data = await fetchWithCorsFallback(url);
+    // data pode vir como objeto JSON normal
+    if (data && data.results) {
+      for (const t of Object.keys(fiis)) {
+        const info = data.results[t] || null;
+        if (info && (info.price !== undefined && info.price !== null)) {
+          fiis[t].priceHG = Number(info.price);
+          fiis[t].variationHG = info.change_percent !== undefined ? Number(info.change_percent) : null;
+          fiis[t].volumeHG = info.volume !== undefined ? Number(info.volume) : null;
+          fiis[t].updatedHG = info.updated_at || new Date().toISOString();
+          successCount++;
+        } else {
+          // não sobrescrever valores existentes; marca null para indicar indisponível
+          fiis[t].priceHG = fiis[t].priceHG ?? null;
+          fiis[t].variationHG = fiis[t].variationHG ?? null;
+          fiis[t].volumeHG = fiis[t].volumeHG ?? null;
         }
-        
-        // Função para formatar números grandes (volume)
-        function formatVolume(value) {
-            if (value === null || value === undefined) return "Não encontrado";
-            if (value >= 1000000) {
-                return (value / 1000000).toFixed(2) + 'M';
-            } else if (value >= 1000) {
-                return (value / 1000).toFixed(2) + 'K';
-            }
-            return value.toString();
-        }
-        
-        // Função para formatar porcentagens
-        function formatPercent(value) {
-            if (value === null || value === undefined) return "Não encontrado";
-            return value.toFixed(2) + '%';
-        }
-        
-        // Função para formatar data
-        function formatDate(dateString) {
-            if (!dateString) return "Não encontrado";
-            const date = new Date(dateString);
-            return date.toLocaleTimeString('pt-BR');
-        }
-        
-        // Função para atualizar a tabela com os dados
-        function updateTable() {
-            let tableHTML = '';
-            let foundData = false;
-            
-            for (const [ticker, data] of Object.entries(fiis)) {
-                const variationClass = data.variation > 0 ? 'positive' : data.variation < 0 ? 'negative' : 'neutral';
-                const variationIcon = data.variation > 0 ? '▲' : data.variation < 0 ? '▼' : '';
-                
-                tableHTML += `
-                    <tr>
-                        <td><strong>${ticker}</strong></td>
-                        <td>${data.price !== null ? formatCurrency(data.price) : '<span class="not-found">Não encontrado</span>'}</td>
-                        <td class="${data.variation !== null ? variationClass : 'not-found'}">
-                            ${data.variation !== null ? `${variationIcon} ${Math.abs(data.variation).toFixed(2)}%` : 'Não encontrado'}
-                        </td>
-                        <td>${data.volume !== null ? formatVolume(data.volume) : '<span class="not-found">Não encontrado</span>'}</td>
-                        <td>${data.lastUpdate !== null ? formatDate(data.lastUpdate) : '<span class="not-found">Não encontrado</span>'}</td>
-                        <td>${data.source !== null ? `<span class="badge bg-info">${data.source}</span>` : '<span class="not-found">Não encontrado</span>'}</td>
-                    </tr>
-                `;
-                
-                if (data.price !== null) foundData = true;
-            }
-            
-            if (!foundData) {
-                tableHTML = `
-                    <tr>
-                        <td colspan="6" class="text-center py-4">
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle"></i> Nenhum dado encontrado nas APIs
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
-            
-            elements.fiiTableBody.innerHTML = tableHTML;
-            
-            // Atualizar o horário da última atualização
-            const now = new Date();
-            elements.lastUpdate.textContent = `Última atualização: ${now.toLocaleTimeString('pt-BR')}`;
-            elements.summaryUpdate.textContent = now.toLocaleTimeString('pt-BR');
-        }
-        
-        // Função para buscar dados da Alpha Vantage
-        async function fetchAlphaVantageData() {
-            const tickers = Object.keys(fiis);
-            let successCount = 0;
-            
-            for (const ticker of tickers) {
-                // A Alpha Vantage usa o sufixo .SA para ações brasileiras
-                const symbol = `${ticker}.SA`;
-                const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${config.alphaVantageKey}`;
-                
-                try {
-                    const response = await fetch(url);
-                    
-                    if (!response.ok) {
-                        throw new Error(`Erro HTTP: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    
-                    if (data['Global Quote'] && data['Global Quote']['05. price']) {
-                        const quote = data['Global Quote'];
-                        fiis[ticker].price = parseFloat(quote['05. price']);
-                        fiis[ticker].variation = parseFloat(quote['10. change percent']?.replace('%', '') || 0);
-                        fiis[ticker].volume = parseInt(quote['06. volume'] || 0);
-                        fiis[ticker].lastUpdate = quote['07. latest trading day'] ? new Date(quote['07. latest trading day']).toISOString() : new Date().toISOString();
-                        fiis[ticker].source = 'Alpha Vantage';
-                        successCount++;
-                    }
-                } catch (error) {
-                    console.error(`Erro ao buscar dados da Alpha Vantage para ${ticker}:`, error);
-                }
-                
-                // Respeitar o limite de 5 requisições por minuto (plano free)
-                await new Promise(resolve => setTimeout(resolve, 12000));
-            }
-            
-            // Atualizar status da API
-            if (successCount > 0) {
-                elements.alphaStatus.classList.remove('status-inactive', 'status-warning');
-                elements.alphaStatus.classList.add('status-active');
-                elements.alphaStatusText.textContent = `Conectada (${successCount} de ${tickers.length} fundos)`;
-                elements.alphaStatusBadge.textContent = 'Conectada';
-                elements.alphaStatusBadge.classList.remove('bg-danger', 'bg-warning');
-                elements.alphaStatusBadge.classList.add('bg-success');
-            } else {
-                elements.alphaStatus.classList.remove('status-active', 'status-warning');
-                elements.alphaStatus.classList.add('status-inactive');
-                elements.alphaStatusText.textContent = 'Erro ao conectar';
-                elements.alphaStatusBadge.textContent = 'Erro';
-                elements.alphaStatusBadge.classList.remove('bg-success', 'bg-warning');
-                elements.alphaStatusBadge.classList.add('bg-danger');
-            }
-            
-            // Atualizar uso da API (simulado)
-            config.apiUsage.alpha = Math.min(100, config.apiUsage.alpha + 15);
-            elements.alphaUsage.style.width = `${config.apiUsage.alpha}%`;
-            elements.alphaUsage.textContent = `${config.apiUsage.alpha}%`;
-            
-            if (config.apiUsage.alpha > 80) {
-                elements.alphaUsage.classList.add('bg-danger');
-                elements.alphaUsage.classList.remove('bg-warning', 'bg-success');
-            } else if (config.apiUsage.alpha > 60) {
-                elements.alphaUsage.classList.add('bg-warning');
-                elements.alphaUsage.classList.remove('bg-danger', 'bg-success');
-            } else {
-                elements.alphaUsage.classList.add('bg-success');
-                elements.alphaUsage.classList.remove('bg-danger', 'bg-warning');
-            }
-            
-            updateTable();
-            updatePortfolioSummary();
-        }
-        
-        // Função para buscar dados da HG Brasil
-        async function fetchHGBrasilData() {
-            const tickers = Object.keys(fiis).join(',');
-            const url = `https://api.hgbrasil.com/finance/stock_price?key=${config.hgBrasilKey}&symbol=${tickers}`;
-            let successCount = 0;
-            
-            try {
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.results) {
-                    for (const [ticker, info] of Object.entries(data.results)) {
-                        if (fiis[ticker] && info.price) {
-                            fiis[ticker].price = info.price;
-                            fiis[ticker].variation = info.change_percent || 0;
-                            fiis[ticker].volume = info.volume || 0;
-                            fiis[ticker].lastUpdate = info.updated_at || new Date().toISOString();
-                            fiis[ticker].source = 'HG Brasil';
-                            successCount++;
-                        }
-                    }
-                }
-                
-                // Atualizar status da API
-                if (successCount > 0) {
-                    elements.hgStatus.classList.remove('status-inactive', 'status-warning');
-                    elements.hgStatus.classList.add('status-active');
-                    elements.hgStatusText.textContent = `Conectada (${successCount} de ${Object.keys(fiis).length} fundos)`;
-                    elements.hgStatusBadge.textContent = 'Conectada';
-                    elements.hgStatusBadge.classList.remove('bg-danger', 'bg-warning');
-                    elements.hgStatusBadge.classList.add('bg-success');
-                } else {
-                    elements.hgStatus.classList.remove('status-active', 'status-warning');
-                    elements.hgStatus.classList.add('status-inactive');
-                    elements.hgStatusText.textContent = 'Erro ao conectar';
-                    elements.hgStatusBadge.textContent = 'Erro';
-                    elements.hgStatusBadge.classList.remove('bg-success', 'bg-warning');
-                    elements.hgStatusBadge.classList.add('bg-danger');
-                }
-            } catch (error) {
-                console.error('Erro ao buscar dados da HG Brasil:', error);
-                elements.hgStatus.classList.remove('status-active', 'status-warning');
-                elements.hgStatus.classList.add('status-inactive');
-                elements.hgStatusText.textContent = 'Erro ao conectar';
-                elements.hgStatusBadge.textContent = 'Erro';
-                elements.hgStatusBadge.classList.remove('bg-success', 'bg-warning');
-                elements.hgStatusBadge.classList.add('bg-danger');
-            }
-            
-            // Atualizar uso da API (simulado)
-            config.apiUsage.hg = Math.min(100, config.apiUsage.hg + 10);
-            elements.hgUsage.style.width = `${config.apiUsage.hg}%`;
-            elements.hgUsage.textContent = `${config.apiUsage.hg}%`;
-            
-            if (config.apiUsage.hg > 80) {
-                elements.hgUsage.classList.add('bg-danger');
-                elements.hgUsage.classList.remove('bg-warning', 'bg-success');
-            } else if (config.apiUsage.hg > 60) {
-                elements.hgUsage.classList.add('bg-warning');
-                elements.hgUsage.classList.remove('bg-danger', 'bg-success');
-            } else {
-                elements.hgUsage.classList.add('bg-success');
-                elements.hgUsage.classList.remove('bg-danger', 'bg-warning');
-            }
-            
-            updateTable();
-            updatePortfolioSummary();
-        }
-        
-        // Função para atualizar o resumo da carteira
-        function updatePortfolioSummary() {
-            let totalValue = 0;
-            let positiveStocks = 0;
-            let count = 0;
-            
-            for (const [ticker, data] of Object.entries(fiis)) {
-                if (data.price !== null) {
-                    totalValue += data.price;
-                    if (data.variation > 0) positiveStocks++;
-                    count++;
-                }
-            }
-            
-            if (count > 0) {
-                const avgPrice = totalValue / count;
-                const positivePercentage = (positiveStocks / count) * 100;
-                
-                let summary = `Sua carteira de ${count} FIIs tem um valor médio de ${formatCurrency(avgPrice)} por ativo. `;
-                summary += `${positiveStocks} de ${count} fundos (${positivePercentage.toFixed(1)}%) estão em alta. `;
-                
-                if (positivePercentage >= 60) {
-                    summary += `A carteira apresenta performance positiva.`;
-                } else if (positivePercentage >= 40) {
-                    summary += `A carteira apresenta performance mista.`;
-                } else {
-                    summary += `A carteira apresenta performance negativa.`;
-                }
-                
-                elements.portfolioSummary.textContent = summary;
-            } else {
-                elements.portfolioSummary.textContent = "Não foi possível calcular o resumo da carteira. Nenhum dado encontrado.";
-            }
-        }
-        
-        // Função para buscar dados de ambas as APIs
-        async function fetchData() {
-            elements.connectionStatus.innerHTML = '<i class="fas fa-sync-alt spinning"></i> Conectando às APIs...';
-            
-            // Executar ambas as APIs simultaneamente
-            await Promise.allSettled([
-                fetchAlphaVantageData(),
-                fetchHGBrasilData()
-            ]);
-            
-            elements.connectionStatus.innerHTML = '<i class="fas fa-wifi"></i> Conectado às APIs';
-        }
-        
-        // Configurar event listeners
-        function setupEventListeners() {
-            elements.refreshBtn.addEventListener('click', fetchData);
-            
-            elements.saveKeysBtn.addEventListener('click', function() {
-                config.alphaVantageKey = elements.alphaKey.value;
-                config.hgBrasilKey = elements.hgKey.value;
-                config.autoRefresh = elements.autoRefresh.checked;
-                
-                localStorage.setItem('fiiConfig', JSON.stringify(config));
-                
-                alert('Configurações salvas com sucesso!');
-                fetchData();
-            });
-            
-            // Toggle para mostrar/esconder chaves API
-            document.querySelectorAll('.toggle-key').forEach(button => {
-                button.addEventListener('click', function() {
-                    const input = this.previousElementSibling;
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        this.innerHTML = '<i class="fas fa-eye-slash"></i>';
-                    } else {
-                        input.type = 'password';
-                        this.innerHTML = '<i class="fas fa-eye"></i>';
-                    }
-                });
-            });
-            
-            // Buscar dados ao carregar a página
-            fetchData();
-            
-            // Configurar atualização automática
-            if (config.autoRefresh) {
-                setInterval(fetchData, config.refreshInterval);
-            }
-        }
-        
-        // Carregar configurações salvas
-        function loadConfig() {
-            const savedConfig = localStorage.getItem('fiiConfig');
-            if (savedConfig) {
-                const parsedConfig = JSON.parse(savedConfig);
-                config.alphaVantageKey = parsedConfig.alphaVantageKey || config.alphaVantageKey;
-                config.hgBrasilKey = parsedConfig.hgBrasilKey || config.hgBrasilKey;
-                config.autoRefresh = parsedConfig.autoRefresh !== undefined ? parsedConfig.autoRefresh : config.autoRefresh;
-                
-                elements.alphaKey.value = config.alphaVantageKey;
-                elements.hgKey.value = config.hgBrasilKey;
-                elements.autoRefresh.checked = config.autoRefresh;
-            }
-        }
-        
-        // Inicializar a aplicação
-        function init() {
-            loadConfig();
-            setupEventListeners();
-            updateTable();
-        }
-        
-        // Iniciar quando o documento estiver pronto
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+      }
+    } else {
+      console.warn('HG Brasil retornou formato inesperado', data);
+    }
+
+    // status visual
+    if (successCount > 0) {
+      elements.hgStatus.classList.remove('status-inactive','status-warning'); elements.hgStatus.classList.add('status-active');
+      elements.hgStatusText.textContent = `Conectada (${successCount}/${tickers.length})`;
+      elements.hgStatusBadge.textContent = 'Conectada'; elements.hgStatusBadge.className = 'badge bg-success';
+    } else {
+      elements.hgStatus.classList.remove('status-active','status-warning'); elements.hgStatus.classList.add('status-inactive');
+      elements.hgStatusText.textContent = 'Sem dados';
+      elements.hgStatusBadge.textContent = 'Erro'; elements.hgStatusBadge.className = 'badge bg-danger';
+    }
+  } catch (err) {
+    console.error('Erro HG Brasil:', err);
+    elements.hgStatus.classList.remove('status-active','status-warning'); elements.hgStatus.classList.add('status-inactive');
+    elements.hgStatusText.textContent = 'Erro ao conectar';
+    elements.hgStatusBadge.textContent = 'Erro'; elements.hgStatusBadge.className = 'badge bg-danger';
+  }
+
+  // uso simulado
+  config.apiUsage.hg = Math.min(100, config.apiUsage.hg + 10);
+  elements.hgUsage.style.width = `${config.apiUsage.hg}%`; elements.hgUsage.textContent = `${config.apiUsage.hg}%`;
+  elements.hgUsage.className = `progress-bar ${config.apiUsage.hg>80?'bg-danger':config.apiUsage.hg>60?'bg-warning':'bg-success'}`;
+}
+
+/* ---------- Alpha Vantage (uma requisição por ticker, com delay para respeitar limite free) ---------- */
+async function fetchAlphaVantageData() {
+  let successCount = 0;
+  for (const t of tickers) {
+    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${t}.SA&apikey=${config.alphaVantageKey}`;
+    try {
+      const data = await fetchWithCorsFallback(url);
+      // algumas vezes a chave tem nomes diferentes — tentar diferentes formas
+      const quote = (data && (data['Global Quote'] || data['Global quote'] || data['global quote'])) ? (data['Global Quote'] || data['Global quote'] || data['global quote']) : null;
+      if (quote && (quote['05. price'] || quote['05. price'] === '0')) {
+        fiis[t].priceAV = quote['05. price'] ? parseFloat(quote['05. price']) : null;
+        fiis[t].variationAV = quote['10. change percent'] ? parseFloat(String(quote['10. change percent']).replace('%','')) : null;
+        fiis[t].volumeAV = quote['06. volume'] ? parseInt(quote['06. volume']) : null;
+        fiis[t].updatedAV = quote['07. latest trading day'] ? new Date(quote['07. latest trading day']).toISOString() : new Date().toISOString();
+        successCount++;
+      } else {
+        // não encontrado nessa API
+        fiis[t].priceAV = fiis[t].priceAV ?? null;
+      }
+    } catch (err) {
+      console.warn('AlphaVantage error for', t, err && err.message ? err.message : err);
+    }
+    // respeitar limite (15s por request é conservador, mas evita bloqueio)
+    await new Promise(r => setTimeout(r, 12000));
+  }
+
+  // status
+  if (successCount > 0) {
+    elements.alphaStatus.classList.remove('status-inactive','status-warning'); elements.alphaStatus.classList.add('status-active');
+    elements.alphaStatusText.textContent = `Conectada (${successCount}/${tickers.length})`;
+    elements.alphaStatusBadge.textContent = 'Conectada'; elements.alphaStatusBadge.className = 'badge bg-success';
+  } else {
+    elements.alphaStatus.classList.remove('status-active','status-warning'); elements.alphaStatus.classList.add('status-inactive');
+    elements.alphaStatusText.textContent = 'Sem dados';
+    elements.alphaStatusBadge.textContent = 'Erro'; elements.alphaStatusBadge.className = 'badge bg-danger';
+  }
+
+  // uso simulado
+  config.apiUsage.alpha = Math.min(100, config.apiUsage.alpha + 15);
+  elements.alphaUsage.style.width = `${config.apiUsage.alpha}%`; elements.alphaUsage.textContent = `${config.apiUsage.alpha}%`;
+  elements.alphaUsage.className = `progress-bar ${config.apiUsage.alpha>80?'bg-danger':config.apiUsage.alpha>60?'bg-warning':'bg-success'}`;
+}
+
+/* ---------- merge dos dados (HG tem prioridade) ---------- */
+function mergeData() {
+  tickers.forEach(t => {
+    const entry = fiis[t];
+    // prefer HG values if presentes, senão Alpha, senão null
+    entry.price = entry.priceHG != null ? entry.priceHG : (entry.priceAV != null ? entry.priceAV : null);
+    entry.variation = entry.variationHG != null ? entry.variationHG : (entry.variationAV != null ? entry.variationAV : null);
+    entry.volume = entry.volumeHG != null ? entry.volumeHG : (entry.volumeAV != null ? entry.volumeAV : null);
+    entry.lastUpdate = entry.updatedHG || entry.updatedAV || null;
+    entry.source = entry.priceHG != null ? 'HG Brasil' : (entry.priceAV != null ? 'Alpha Vantage' : null);
+  });
+}
+
+/* ---------- render tabela e resumo ---------- */
+function updateTable() {
+  const search = document.getElementById('searchInput').value.trim().toUpperCase();
+  const sortBy = document.getElementById('sortSelect').value;
+  const rows = [];
+
+  tickers.forEach(t => {
+    const d = fiis[t];
+    rows.push({
+      ticker: t,
+      price: d.price,
+      variation: d.variation,
+      volume: d.volume,
+      lastUpdate: d.lastUpdate,
+      source: d.source
+    });
+  });
+
+  // filtro por busca
+  let filtered = rows.filter(r => r.ticker.includes(search));
+
+  // ordenacao simples
+  filtered.sort((a,b) => {
+    if (sortBy === 'ticker') return a.ticker.localeCompare(b.ticker);
+    if (sortBy === 'price') return (b.price||0) - (a.price||0);
+    if (sortBy === 'variation') return (b.variation||0) - (a.variation||0);
+    if (sortBy === 'volume') return (b.volume||0) - (a.volume||0);
+    return 0;
+  });
+
+  // montar HTML
+  let html = '';
+  filtered.forEach(r => {
+    const varClass = (typeof r.variation === 'number') ? (r.variation > 0 ? 'positive' : (r.variation < 0 ? 'negative' : '')) : 'not-found';
+    const varLabel = (typeof r.variation === 'number') ? `${r.variation>0?'▲':'▼'} ${Math.abs(r.variation).toFixed(2)}%` : '<span class="not-found">Não encontrado</span>';
+    html += `<tr>
+      <td>${r.ticker}</td>
+      <td>${r.price != null ? formatCurrency(r.price) : '<span class="not-found">Não encontrado</span>'}</td>
+      <td class="${varClass}">${varLabel}</td>
+      <td>${r.volume != null ? formatVolume(r.volume) : '<span class="not-found">Não encontrado</span>'}</td>
+      <td>${r.lastUpdate ? new Date(r.lastUpdate).toLocaleTimeString('pt-BR') : '<span class="not-found">Não encontrado</span>'}</td>
+      <td>${r.source ? `<span class="badge bg-info">${r.source}</span>` : '<span class="not-found">Não encontrado</span>'}</td>
+    </tr>`;
+  });
+
+  if (filtered.length === 0) {
+    html = `<tr><td colspan="6" class="text-center py-4"><div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Nenhum dado encontrado (verifique chaves / CORS)</div></td></tr>`;
+  }
+
+  elements.fiiTableBody.innerHTML = html;
+  const now = new Date();
+  elements.lastUpdate.textContent = `Última atualização: ${now.toLocaleTimeString('pt-BR')}`;
+  elements.summaryUpdate.textContent = now.toLocaleTimeString('pt-BR');
+  elements.connectionStatus.textContent = 'Conectado às APIs (status exibido acima)';
+}
+
+function updatePortfolioSummary() {
+  let total = 0, count = 0, positives = 0;
+  tickers.forEach(t => {
+    const p = fiis[t].price;
+    const v = fiis[t].variation;
+    if (typeof p === 'number') { total += p; count++; if (typeof v === 'number' && v > 0) positives++; }
+  });
+  if (count === 0) { elements.portfolioSummary.textContent = 'Não foi possível calcular o resumo (nenhum dado).'; return; }
+  const avg = total / count;
+  const posPct = (positives / count) * 100;
+  let txt = `Sua carteira de ${count} FIIs tem valor médio de ${formatCurrency(avg)} por ativo. ${positives} de ${count} (${posPct.toFixed(1)}%) em alta. `;
+  txt += posPct >= 60 ? 'Performance positiva.' : posPct >= 40 ? 'Performance mista.' : 'Performance negativa.';
+  elements.portfolioSummary.textContent = txt;
+}
+
+/* ---------- rotina principal de fetch (usa os 2) ---------- */
+async function fetchData() {
+  elements.connectionStatus.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Conectando às APIs...';
+  // ler chaves (caso usuario tenha alterado via input)
+  config.alphaVantageKey = document.getElementById('alphaKey').value.trim() || config.alphaVantageKey;
+  config.hgBrasilKey = document.getElementById('hgKey').value.trim() || config.hgBrasilKey;
+
+  // executar HG em lote (rapido) e Alpha (sequencial com delay) simultaneamente
+  await Promise.allSettled([ fetchHGBrasilData(), fetchAlphaVantageData() ]);
+
+  // merge e render
+  mergeData();
+  updateTable();
+  updatePortfolioSummary();
+  elements.connectionStatus.textContent = 'Conectado às APIs';
+}
+
+/* ---------- listeners e helpers UI simples ---------- */
+function setupEventListeners() {
+  // salvar
+  elements.saveKeysBtn.addEventListener('click', () => {
+    config.alphaVantageKey = document.getElementById('alphaKey').value.trim() || config.alphaVantageKey;
+    config.hgBrasilKey = document.getElementById('hgKey').value.trim() || config.hgBrasilKey;
+    config.autoRefresh = document.getElementById('autoRefresh').checked;
+    localStorage.setItem('fiiConfig', JSON.stringify(config));
+    alert('Configurações salvas.');
+    fetchData();
+  });
+
+  // refresh
+  elements.refreshBtn.addEventListener('click', () => fetchData());
+
+  // toggle key visibility (manter ocultas por padrão; toggle apenas para visualização quando clicado)
+  elements.toggleKeyButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const input = this.parentElement.querySelector('input');
+      if (!input) return;
+      input.type = input.type === 'password' ? 'text' : 'password';
+      this.innerHTML = input.type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+    });
+  });
+
+  // search + sort
+  document.getElementById('searchInput').addEventListener('input', updateTable);
+  document.getElementById('sortSelect').addEventListener('change', updateTable);
+}
+
+/* ---------- carregar config local se existir ---------- */
+function loadConfig() {
+  const saved = localStorage.getItem('fiiConfig');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      Object.assign(config, parsed);
+      document.getElementById('alphaKey').value = config.alphaVantageKey;
+      document.getElementById('hgKey').value = config.hgBrasilKey;
+      document.getElementById('autoRefresh').checked = config.autoRefresh;
+    } catch(e) { console.warn('config load fail', e); }
+  }
+}
+
+/* ---------- inicializacao ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+  loadConfig();
+  setupEventListeners();
+  updateTable(); // mostra estrutura inicial
+  fetchData();
+  if (config.autoRefresh) setInterval(fetchData, config.refreshInterval);
+});
+</script>
 </body>
 </html>
