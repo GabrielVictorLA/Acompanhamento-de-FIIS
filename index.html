@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acompanhamento de Fundos Imobiliários</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            padding-top: 20px;
+            -webkit-text-size-adjust: 100%;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+            margin-bottom: 20px;
+            border: none;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: 600;
+            padding: 15px;
+        }
+        
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background-color: var(--secondary-color);
+            color: white;
+            position: sticky;
+            top: 0;
+            padding: 12px 10px;
+            font-size: 0.9rem;
+        }
+        
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        .positive {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .negative {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        .neutral {
+            color: #f39c12;
+            font-weight: 600;
+        }
+        
+        .summary-card {
+            background-color: var(--light-color);
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .progress {
+            height: 8px;
+            margin-bottom: 5px;
+        }
+        
+        .filter-section {
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .ticker-label {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+            display: inline-block;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        /* Melhorias para iOS */
+        input, select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-ios {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-weight: 600;
+            margin: 10px 0;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            th, td {
+                padding: 8px 5px;
+                font-size: 0.8rem;
+            }
+            
+            .card {
+                margin-bottom: 15px;
+            }
+            
+            .table-responsive {
+                font-size: 0.85rem;
+                overflow-x: auto;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header text-center">
+            <h1><i class="fas fa-chart-line me-2"></i>Acompanhamento de Fundos Imobiliários</h1>
+            <p class="lead">Monitore e analise seus FIIs com dados atualizados do mercado</p>
+            <div class="mt-3">
+                <span class="ticker-label" style="background-color: #3498db;">GARE11</span>
+                <span class="ticker-label" style="background-color: #2ecc71;">CACR11</span>
+                <span class="ticker-label" style="background-color: #e74c3c;">KNCR11</span>
+                <span class="ticker-label" style="background-color: #f39c12;">SNEL11</span>
+                <span class="ticker-label" style="background-color: #9b59b6;">XPML11</span>
+            </div>
+            <a href="javascript:void(0)" onclick="saveToHomeScreen()" class="btn-ios mt-3">
+                <i class="fas fa-plus-circle"></i> Adicionar à Tela Inicial
+            </a>
+        </div>
+        
+        <div class="filter-section mb-4">
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label for="sortSelect" class="form-label">Ordenar por:</label>
+                    <select class="form-select" id="sortSelect">
+                        <option value="ticker">Ticker</option>
+                        <option value="dy">Dividend Yield (DY)</option>
+                        <option value="pvp">P/VP</option>
+                        <option value="wualt">WUALT</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label for="searchInput" class="form-label">Buscar:</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Digite o ticker ou característica...">
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>DY (%)</th>
+                        <th>P/VP</th>
+                        <th>Composição</th>
+                        <th>Gestão</th>
+                        <th>Taxa Adm</th>
+                        <th>WUALT</th>
+                        <th>Inadimplência</th>
+                        <th>Endividamento</th>
+                        <th>Cotistas</th>
+                        <th>Resiliência</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>GARE11</strong></td>
+                        <td class="positive">7.8%</td>
+                        <td>0.92</td>
+                        <td>Galpões Logísticos</td>
+                        <td>Vinci Partners</td>
+                        <td>0.5%</td>
+                        <td class="positive">Alta</td>
+                        <td class="positive">1.2%</td>
+                        <td class="positive">28%</td>
+                        <td>12.450</td>
+                        <td class="positive">Alta</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CACR11</strong></td>
+                        <td class="positive">8.2%</td>
+                        <td>1.05</td>
+                        <td>Crédito Imobiliário</td>
+                        <td>BTG Pactual</td>
+                        <td>0.8%</td>
+                        <td class="neutral">Média</td>
+                        <td class="negative">3.5%</td>
+                        <td class="neutral">35%</td>
+                        <td>8.720</td>
+                        <td class="neutral">Média</td>
+                    </tr>
+                    <tr>
+                        <td><strong>KNCR11</strong></td>
+                        <td class="positive">9.1%</td>
+                        <td>0.87</td>
+                        <td>Títulos e Débentures</td>
+                        <td>Kinea</td>
+                        <td>0.6%</td>
+                        <td class="negative">Baixa</td>
+                        <td class="negative">4.8%</td>
+                        <td class="negative">42%</td>
+                        <td>6.350</td>
+                        <td class="negative">Baixa</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SNEL11</strong></td>
+                        <td class="positive">6.5%</td>
+                        <td>1.12</td>
+                        <td>Energia Solar</td>
+                        <td>Suno</td>
+                        <td>0.7%</td>
+                        <td class="positive">Alta</td>
+                        <td class="positive">0.8%</td>
+                        <td class="positive">22%</td>
+                        <td>15.800</td>
+                        <td class="positive">Alta</td>
+                    </tr>
+                    <tr>
+                        <td><strong>XPML11</strong></td>
+                        <td class="positive">7.2%</td>
+                        <td>0.96</td>
+                        <td>Shoppings e Lajes</td>
+                        <td>XP Investimentos</td>
+                        <td>0.9%</td>
+                        <td class="neutral">Média</td>
+                        <td class="neutral">2.1%</td>
+                        <td class="neutral">38%</td>
+                        <td>20.150</td>
+                        <td class="neutral">Média</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <h2 class="mt-5 mb-4">Análises Individuais</h2>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">GARE11 - <small>Galpões Logísticos</small></div>
+                    <div class="card-body">
+                        <h5 class="card-title">Análise</h5>
+                        <p class="card-text">Foco em galpões logísticos em regiões estratégicas. Baixa inadimplência e endividamento controlado. Alta resiliência em crises devido à demanda constante por armazenamento.</p>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width: 85%"></div>
+                        </div>
+                        <small>Classificação: 8.5/10</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">CACR11 - <small>Crédito Imobiliário</small></div>
+                    <div class="card-body">
+                        <h5 class="card-title">Análise</h5>
+                        <p class="card-text">Expõe-se ao crédito imobiliário com bons retornos, porém com inadimplência acima da média. Gestão experiente do BTG, mas vulnerável a crises econômicas.</p>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" style="width: 70%"></div>
+                        </div>
+                        <small>Classificação: 7.0/10</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">KNCR11 - <small>Títulos e Débentures</small></div>
+                    <div class="card-body">
+                        <h5 class="card-title">Análise</h5>
+                        <p class="card-text">Maior DY da carteira, mas com maiores riscos. Alta inadimplência e endividamento elevado. Pode sofrer bastante em cenários de crise ou altas taxas de juros.</p>
+                        <div class="progress">
+                            <div class="progress-bar bg-danger" style="width: 60%"></div>
+                        </div>
+                        <small>Classificação: 6.0/10</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">SNEL11 - <small>Energia Solar</small></div>
+                    <div class="card-body">
+                        <h5 class="card-title">Análise</h5>
+                        <p class="card-text">Fundo inovador com foco em energia solar. Baixíssima inadimplência e endividamento. Setor com grande potencial de crescimento e resiliente a crises.</p>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width: 90%"></div>
+                        </div>
+                        <small>Classificação: 9.0/10</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mx-auto">
+                <div class="card">
+                    <div class="card-header">XPML11 - <small>Shoppings e Lajes</small></div>
+                    <div class="card-body">
+                        <h5 class="card-title">Análise</h5>
+                        <p class="card-text">Diversificado entre shoppings e lajes corporativas. Maior número de cotistas, indicando boa liquidez. Performance mediana na maioria dos indicadores.</p>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" style="width: 75%"></div>
+                        </div>
+                        <small>Classificação: 7.5/10</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card summary-card mt-5">
+            <div class="card-body">
+                <h4 class="card-title"><i class="fas fa-lightbulb me-2"></i>Resumo da Carteira</h4>
+                <p class="card-text">Sua carteira é diversificada entre diferentes segmentos de FIIs. Possui boas opções defensivas (GARE11, SNEL11) e outras mais arriscadas com potencial de retorno (KNCR11). O DY médio da carteira é de aproximadamente <strong>7.76%</strong>. A resiliência geral é considerada média-alta, com boa proteção contra crises.</p>
+                <p class="card-text"><strong>Recomendação:</strong> Manter a diversificação atual, considerando aumentar posição em SNEL11 e GARE11 para reduzir risco.</p>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">Instruções para iOS</div>
+            <div class="card-body">
+                <h5>Como adicionar à tela inicial:</h5>
+                <ol>
+                    <li>Toque no botão "Compartilhar" no Safari (ícone de quadrado com flecha)</li>
+                    <li>Role para baixo e toque em "Adicionar à Tela Inicial"</li>
+                    <li>Toque em "Adicionar" no canto superior direito</li>
+                </ol>
+                <p>Assim você poderá acessar esta tabela diretamente como um app!</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Última atualização: 06 de Junho de 2023 | Dados para fins ilustrativos</p>
+            <p>© 2023 - Análise de Fundos Imobiliários</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Funcionalidade básica de filtro e ordenação
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const table = document.querySelector('table');
+            const tr = table.getElementsByTagName('tr');
+            
+            for (let i = 1; i < tr.length; i++) {
+                const td = tr[i].getElementsByTagName('td');
+                let show = false;
+                
+                for (let j = 0; j < td.length; j++) {
+                    if (td[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                        show = true;
+                        break;
+                    }
+                }
+                
+                tr[i].style.display = show ? '' : 'none';
+            }
+        });
+        
+        document.getElementById('sortSelect').addEventListener('change', function() {
+            // Em uma aplicação real, isso seria implementado com JavaScript mais avançado
+            // para ordenar a tabela de acordo com o critério selecionado
+            alert('Funcionalidade de ordenação será implementada em versão futura');
+        });
+        
+        function saveToHomeScreen() {
+            alert('Para adicionar à tela inicial, use o botão de compartilhar no Safari e selecione "Adicionar à Tela Inicial"');
+        }
+    </script>
+</body>
+</html>
